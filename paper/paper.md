@@ -142,8 +142,8 @@ demonstrating this type of archive screening and retrieval process.
 
 This is particularly relevant for ocean biogeochemistry and carbon-cycle studies for example, where analyses often
 depend on coherent combinations of physical and biogeochemical fields rather than isolated variables (e.g., retrieval of
-carbonate system fields as well as ocean state physical variables). In such cases, the time spent screening archive
-holdings, checking consistency, and organising downloads can be substantial (e.g. [@Wilson2022]), and purpose-built
+carbonate system fields as well as ocean state physical variables, [@Wilson2022]). In such cases, the time spent screening archive
+holdings, checking consistency, and organising downloads can be substantial, and purpose-built
 automation improves both efficiency and reproducibility.
 
 Therefore, `precog-data-intake` fills a workflow gap between catalogue access and scientific analysis. The software
