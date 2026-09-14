@@ -60,8 +60,8 @@ within their computational and storage constraints.
 # State of the field
 
 CMIP data are currently distributed through ESGF, which provides web-based discovery and download services for CMIP5,
-CMIP6, CMIP6Plus, and the upcoming CMIP7 phases. Recent development efforts have focused on analysis-ready, 
-cloud-optimised approaches based on in-memory object storage [@Mizielinski2026], with catalogue sweep tools enabling 
+CMIP6, CMIP6Plus, and the upcoming CMIP7 phases. Recent development efforts have focused on analysis-ready,
+cloud-optimised approaches based on in-memory object storage [@Mizielinski2026], with catalogue sweep tools enabling
 more scalable access through Python and xarray.
 
 `precog-data-intake` builds on the ESGF catalogue node sweeping implementation from `intake-esgf`
@@ -99,8 +99,9 @@ The software provides several features tailored to archive-scale Earth system da
 `precog-data-intake` implements a staged workflow for archive-scale ESGF data discovery and retrieval. Rather than
 moving directly from catalogue search to cached download, the software separates archive interrogation, shortlist
 generation, downloadability checks, and file retrieval into distinct command-line steps, allowing users to inspect and
-validate intermediate results before proceeding. In a typical workflow, the user first specifies a parent download
-directory and one or more target variables. The catalogue search stage then queries ESGF holdings for matching CMIP6
+validate intermediate results before proceeding. In a typical workflow (Figure 1), the user first specifies a parent
+download directory and one or more target variables. The catalogue search stage then queries ESGF holdings for matching
+CMIP6
 products, filters
 results to retain scientifically relevant combinations such as paired `piControl` and `historical` simulations, and
 exports tabular search summaries for
@@ -112,7 +113,8 @@ software supports both interactive use and later auditing of dataset selection d
 
 ![](data-intake-diagram.png)
 {width=90%}
-*precog-data-intake toolkit overview and directory structure of an example ESGF download. The top-level directory
+*Figure 1. precog-data-intake toolkit overview and directory structure of an example ESGF download. The top-level
+directory
 contains search outputs and model-specific CMIP6 data organized by model, experiment, variable, and annual files.*
 
 # Research impact and applications
