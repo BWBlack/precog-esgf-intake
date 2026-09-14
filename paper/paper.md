@@ -47,25 +47,28 @@ experiments, ensemble members, and grid configurations is both scientifically su
 before substantial time is spent retrieving files.
 
 This issue is especially important for CMIP-style analyses in which researchers may need to confirm that the same Earth
-System Model provides paired pre-industrial, historical and
-ssp-scenario simulations, that multiple variables of interest are available and whether these are separately 
-archived on compatible grids for downstream analyses; and that temporal coverage is continuous across archived files. Manual inspection of catalogue search results can become slow,
-repetitive, and error-prone when screening many candidate models or variables across multiple ESGF nodes.
+System Model provides paired pre-industrial, historical and ssp-scenario simulations, that multiple variables of
+interest are available and whether these are separately
+archived on compatible grids for downstream analyses; and that temporal coverage is continuous across archived files.
+Manual inspection of catalogue search results can become slow, repetitive, and error-prone when screening many candidate
+models or variables across multiple ESGF nodes.
 
 Among its features, `precog-data-intake` provides an interactive workflow for shortlisting Earth System Model datasets
 that satisfy compound criteria across experiments and variables. The software validates temporal coverage, grid
 consistency, and file availability across published ESGF archives before download. Users can export search results as
 tabular summaries, inspect and refine shortlisted datasets, and initiate batch downloads or trigger file integrity
-checks with locally assigned output paths. Retrieved data are then organised into a directory structure suitable for
+checks on locally assigned output paths. Retrieved data are then organised into a directory structure suitable for
 reproducible downstream analysis. This workflow is particularly useful when researchers need to screen many candidate
 models and variables before selecting datasets that are both scientifically appropriate and operationally accessible
 within their computational and storage constraints.
 
-Furthermore, by wrapping ESGF discovery and CMIP variable conventions (including less familiar fields like `volcello`, 
-`areacello`, and input validation when searching for any variable of interest) behind a simple, high‑level Python 
-interface,`precog-data-intake` lowers the barrier for researchers new to CMIP and the ESGF ecosystem to find, load, and 
-start analysing marine biogeochemical model outputs without the need for mastering CMIP’s metadata and directory 
-conventions.
+Furthermore, by wrapping ESGF discovery and CMIP variable conventions (including less familiar fields like `volcello`,
+`areacello`, and input validation when searching for any `variable` of interest) behind a simple, high‑level Python
+CLI interface, `precog-data-intake` lowers the barrier for researchers new to CMIP and the ESGF ecosystem to find,
+load, and start analysing Earth System Model outputs without the need for mastering CMIP metadata and directory
+conventions. The simple design also enables `precog-data-intake` to be used directly in terminal-based HPC environments,
+allowing users to run data discovery and ingestion from visualization nodes and Jupyter sessions relying on
+interactive web interfaces or manual downloads.
 
 # State of the field
 
