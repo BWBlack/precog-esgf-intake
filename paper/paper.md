@@ -10,9 +10,6 @@ authors:
   - name: Leonardo Bertini^[corresponding author]
     orcid: 0000-0003-3920-4476
     affiliation: 1 # (Multiple affiliations must be quoted)
-  - name: Jamie Wilson
-    orcid: 0000-0001-7509-4791
-    affiliation: 1
   - name: Sam Ditkovsky
     orcid: 0000-0002-4759-9829
     affiliation: 1
@@ -62,6 +59,11 @@ within their computational and storage constraints.
 
 # State of the field
 
+CMIP data are currently distributed through ESGF, which provides web-based discovery and download services for CMIP5,
+CMIP6, CMIP6Plus, and the upcoming CMIP7 phases. Recent development efforts have focused on analysis-ready, 
+cloud-optimized approaches based on in-memory object storage [@Mizielinski2026], with catalog sweep tools enabling 
+more scalable access through Python and xarray.
+
 `precog-data-intake` builds on the ESGF catalogue node sweeping implementation from `intake-esgf`
 [@Collier_intake_esgf_2026], but targets a different level of the workflow: rather than focusing only on data access
 primitives and caching data-responses to in-memory use, it provides an interactive command-line environment for ample
@@ -98,15 +100,17 @@ The software provides several features tailored to archive-scale Earth system da
 moving directly from catalogue search to cached download, the software separates archive interrogation, shortlist
 generation, downloadability checks, and file retrieval into distinct command-line steps, allowing users to inspect and
 validate intermediate results before proceeding. In a typical workflow, the user first specifies a parent download
-directory and one or more target variables. The catalogue search stage then queries ESGF holdings for matching CMIP6 products, filters
-results to retain scientifically relevant combinations such as paired `piControl` and `historical` simulations, and exports tabular search summaries for
+directory and one or more target variables. The catalogue search stage then queries ESGF holdings for matching CMIP6
+products, filters
+results to retain scientifically relevant combinations such as paired `piControl` and `historical` simulations, and
+exports tabular search summaries for
 inspection. Subsequent stages verify whether shortlisted files are reachable on remote nodes, assign local destination
 paths, and download both target variables and required supporting grid-cell measures such as `areacello` and `volcello`.
 This staged design is intended to improve transparency and reproducibility in archive-based Earth system workflows. By
 treating search results, validation outputs, and downloadable file lists as explicit intermediate artifacts, the
 software supports both interactive use and later auditing of dataset selection decisions.
 
-![precog-data-intake toolkit overview and directory structure of an example ESGF download. The top-level directory 
+![precog-data-intake toolkit overview and directory structure of an example ESGF download. The top-level directory
 contains search outputs and model-specific CMIP6 data organized by model, experiment, variable, and annual files.](data-intake-diagram.png)
 {width=90%}
 
