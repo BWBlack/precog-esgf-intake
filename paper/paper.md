@@ -110,9 +110,10 @@ This staged design is intended to improve transparency and reproducibility in ar
 treating search results, validation outputs, and downloadable file lists as explicit intermediate artifacts, the
 software supports both interactive use and later auditing of dataset selection decisions.
 
-![precog-data-intake toolkit overview and directory structure of an example ESGF download. The top-level directory
-contains search outputs and model-specific CMIP6 data organized by model, experiment, variable, and annual files.](data-intake-diagram.png)
+![](data-intake-diagram.png)
 {width=90%}
+*precog-data-intake toolkit overview and directory structure of an example ESGF download. The top-level directory
+contains search outputs and model-specific CMIP6 data organized by model, experiment, variable, and annual files.*
 
 # Research impact and applications
 
