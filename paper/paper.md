@@ -31,7 +31,7 @@ software is designed for research workflows that require reproducible access to 
 datasets and is particularly aimed at bulk screening of Earth system archives before downstream analysis. The
 software builds on inherited ESGF access functionality from `intake-esgf` [@Collier_intake_esgf_2026], while
 introducing interactive CLI workflows for archive interrogation, file-availability checks, grid-consistency
-cross-checks, temporal validation, export of search-result in tabular formats, and optimised download management of
+cross-checks, temporal validation, export of search results in tabular formats, and optimised download management of
 shortlisted Earth System Model data products.
 
 # Statement of need
@@ -52,7 +52,7 @@ Among its features, `precog-data-intake` provides an interactive workflow for sh
 that satisfy compound criteria across experiments and variables. The software validates temporal coverage, grid
 consistency, and file availability across published ESGF archives before download. Users can export search results as
 tabular summaries, inspect and refine shortlisted datasets, and initiate batch downloads or trigger file integrity
-checks with locally assigned output paths. Retrieved data are then organized into a directory structure suitable for
+checks with locally assigned output paths. Retrieved data are then organised into a directory structure suitable for
 reproducible downstream analysis. This workflow is particularly useful when researchers need to screen many candidate
 models and variables before selecting datasets that are both scientifically appropriate and operationally accessible
 within their computational and storage constraints.
@@ -61,7 +61,7 @@ within their computational and storage constraints.
 
 CMIP data are currently distributed through ESGF, which provides web-based discovery and download services for CMIP5,
 CMIP6, CMIP6Plus, and the upcoming CMIP7 phases. Recent development efforts have focused on analysis-ready, 
-cloud-optimized approaches based on in-memory object storage [@Mizielinski2026], with catalog sweep tools enabling 
+cloud-optimised approaches based on in-memory object storage [@Mizielinski2026], with catalogue sweep tools enabling 
 more scalable access through Python and xarray.
 
 `precog-data-intake` builds on the ESGF catalogue node sweeping implementation from `intake-esgf`
@@ -125,7 +125,7 @@ screening and retrieval process.
 This is particularly relevant for ocean biogeochemistry and carbon-cycle studies for example, where analyses often
 depend on coherent combinations of physical and biogeochemical fields rather than isolated variables (e.g., retrieval of
 carbonate system fields as well as ocean state physical variables). In such cases, the time spent screening archive
-holdings, checking consistency, and organizing downloads can be substantial, and purpose-built automation improves both
+holdings, checking consistency, and organising downloads can be substantial, and purpose-built automation improves both
 efficiency and reproducibility.
 
 Therefore, `precog-data-intake` fills a workflow gap between catalogue access and scientific analysis. The software
