@@ -1,0 +1,34 @@
+
+[search]
+
+# ESGF project or projects to search.
+# intake-esgf supports projects such as "cmip6", "cmip5", "cmip3", "obs4mips", and "drcdp";
+# for this script, CMIP6 is the intended use case.
+# Example: ["CMIP6"]
+project = ["CMIP6"]
+
+# CMIP activity identifiers.
+# Common examples include "CMIP" for core historical/control runs and "ScenarioMIP" for scenario runs.
+# Examples: ["CMIP"], ["ScenarioMIP"], ["CMIP", "ScenarioMIP"]
+activity_drs = ["CMIP", "ScenarioMIP"]
+
+# Experiment identifiers to require in the search.
+# Common examples from intake-esgf docs include "historical", "piControl", and future scenarios such as "ssp585".
+# For this script, the usual screening target is ["piControl", "historical"].
+experiment_id = ["piControl", "historical"]
+
+# Output frequency.
+# Common examples include "mon" for monthly and "fx" for fixed fields.
+# For ocean biogeochemistry screening, monthly output is usually appropriate.
+frequency = ["mon"]
+
+# Variables to search for.
+# Examples from intake-esgf docs include "tas", "gpp", and "areacella";
+# examples for this workflow include "expc", "epc100", "o2", "thetao", "so", "o2sat".
+# Leave this empty ([] ) to trigger an interactive prompt in the script.
+variable_id = []
+
+# Grid labels to accept.
+# Common CMIP6 examples include "gn" (native grid), "gr" (regridded), and sometimes "gra", "grg", "gr1", "gr2".
+# For this script, the usual choice is ["gn", "gr"].
+grid_label = ["gn", "gr"]
