@@ -295,7 +295,7 @@ if __name__ == "__main__":
     else:
         logger1.info(f'File {filename} found.')
         u_response = input(f"Type 'new' if you want a new catalogue search for {var}.\nAlternatively, type 'skip' to trigger downloads using existing Dataframe file {filename}:\n")
-        if u_response.lower().strip(" ") == 'new':
+        if u_response.lower().strip() == "'new'":
             logger1.info('Starting new catalogue search...')
             varcell_prepare_df(logger_name=str(var), variable_id=var)
 
