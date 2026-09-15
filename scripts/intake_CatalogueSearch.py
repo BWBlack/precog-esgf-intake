@@ -91,12 +91,14 @@ DicDataframeSearches = {'variable_names': [], 'search_results':[]} #initialising
 
 for oceanvar in variable_ids:
     if oceanvar.lower() in variables_of_interest:
-        cat =ESGFCatalog().search(project='CMIP6',
-                                    activity_drs=['CMIP', 'ScenarioMIP'],
-                                    experiment_id=['piControl', 'historical'],
-                                    frequency='mon',
-                                    variable_id= oceanvar,
-                                    grid_label=['gn', 'gr'])
+        cat = ESGFCatalog().search(
+            project=search_project,
+            activity_drs=search_activity_drs,
+            experiment_id=search_experiment_id,
+            frequency=search_frequency,
+            variable_id=oceanvar,
+            grid_label=search_grid_label
+        )
 
         print(cat.model_groups().to_string())
         cat = cat.remove_ensembles()  # filters out to keep only a single member from the ensemble (i.e., the one with the lowest variant label (see below)
