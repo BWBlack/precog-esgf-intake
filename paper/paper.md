@@ -28,7 +28,7 @@ bibliography: paper.bib
 `precog-data-intake` is a Python command-line-interface (CLI) software for automated discovery, checking,
 validation, and download of Earth System Model outputs from Earth System Grid Federation (ESGF) archives. The
 software is designed for research workflows that require reproducible access to large, distributed climate-model
-datasets and is particularly aimed at bulk screening of Earth system archives before downstream analysis. The
+datasets and is particularly aimed at bulk screening of Earth System archives before downstream analysis. The
 software builds on inherited ESGF access functionality from `intake-esgf` [@Collier_intake_esgf_2026], while
 introducing interactive CLI workflows for archive interrogation, file-availability checks, grid-consistency
 cross-checks, temporal validation, export of search results in tabular formats, and optimised download management of
@@ -67,16 +67,15 @@ Furthermore, by wrapping ESGF discovery and CMIP variable conventions (including
 CLI interface, `precog-data-intake` lowers the barrier for researchers new to CMIP and the ESGF ecosystem to find,
 load, and start analysing Earth System Model outputs without the need for mastering CMIP metadata and directory
 conventions. The simple design also enables `precog-data-intake` to be used directly in terminal-based HPC environments,
-allowing users to run data discovery and ingestion from visualization nodes and Jupyter sessions relying on
-interactive web interfaces or manual downloads.
+allowing users to run data discovery and ingestion from visualization nodes and Jupyter sessions instead of
+relying on interactive web interfaces or manual downloads.
 
 # State of the field
 
 CMIP data are currently distributed through the ESGF metagrid web application, which provides web-based discovery and
 download services for CMIP5, CMIP6, CMIP6Plus, and the upcoming CMIP7 phases. Recent development efforts have focused on
 analysis-ready, cloud-optimised approaches based on in-memory object storage [@Mizielinski2026], with catalogue sweep
-tools enabling
-more scalable access through Python and xarray, while community evaluation frameworks like ESMValTool[@ESMValTool]
+tools enabling more scalable access through Python and xarray, while community evaluation frameworks like ESMValTool[@ESMValTool]
 supporting integrated diagnostics for benchmarking model outputs.
 
 `precog-data-intake` builds on the ESGF catalogue node sweeping implementation from `intake-esgf`
@@ -137,7 +136,7 @@ A representative use case is the identification of CMIP6 models that simultaneou
 and historical outputs for ocean biogeochemical variables such as `expc` and `epc100`, together with auxiliary or
 supporting variables and the associated grid-cell measures required for downstream analyses. The repository
 accompanying this software includes
-a [workflow example](https://github.com/LeoBertini/precog-data-intake/blob/main/Workflow_Example_POCflux.ipynb).
+a [workflow example](https://github.com/LeoBertini/precog-data-intake/blob/main/Workflow_Example_POCflux.ipynb)
 demonstrating this type of archive screening and retrieval process.
 
 This is particularly relevant for ocean biogeochemistry and carbon-cycle studies for example, where analyses often
