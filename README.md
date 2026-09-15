@@ -1,4 +1,4 @@
-# precog-data-intake 🦑
+# precog-esgf-intake 🦑
 
 Automated discovery, validation, and optimized download management of Earth system model data
 from [Earth System Grid Federation](https://esgf-ui.ceda.ac.uk/search) nodes.
@@ -34,7 +34,7 @@ These instructions assume you have **Python 3.12+** installed and available as `
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/precog-ocean/precog-data-intake.git
+git clone https://github.com/precog-ocean/precog-esgf-intake.git
 cd precog-esgf-intake
 ````
 
@@ -49,7 +49,7 @@ You can check which python you have installed on your machine by typing `python`
 list your python versions.
 
 The argument `.venv` means a hidden directory will be created under the project directory you are in, where python and
-its dependencies will be installed (i.e., `~/precog-data-intake/.venv`).
+its dependencies will be installed (i.e., `~/precog-esgf-intake/.venv`).
 
 ### 3. Activate it
 
@@ -88,7 +88,7 @@ the example below, then you probably installed things correctly.
 
 ## Repository structure
 ```                
-precog-data-intake/
+precog-esgf-intake/
 ├─ intake_esgf_mods/     # Adaptations to "esgf-intake" catalogue functionality
 ├─ misc_images/          # Images (these are renderered as ASCII art headers and footers in the CLI)
 ├─ paper/                # JOSS submission files and configs for automated pdf draft generator through GitHub actions.

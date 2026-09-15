@@ -16,7 +16,7 @@ IpgVqd44dd44ddd4d6qd44hmhd44gge*cv,|h4qC     =v)|    ;v><.  /v))%xx%xx%v.  "v))%
          ejojzLununnnnuuuuuLozz{    
 ```
 
-Thank you for your interest in contributing to `precog-data-intake`.
+Thank you for your interest in contributing to `precog-esgf-intake`.
 Contributions are welcome, including bug reports, feature requests, code improvements, 
 documentation updates, tests, and workflow examples.
 
@@ -26,14 +26,14 @@ There are several ways to contribute to this project:
 
 1. **Report Bugs**  
    If you encounter a bug, please open an issue on
-   the [issue tracker](https://github.com/precog-ocean/precog-data-intake/issues). Include a clear description of the
+   the [issue tracker](https://github.com/precog-ocean/precog-esgf-intake/issues). Include a clear description of the
    problem, the ESGF search or download parameters used (if relevant), steps to reproduce the issue, and any useful
    logs, screenshots, or error messages.
 
 2. **Suggest Enhancements**  
    If you have ideas for new features, improved workflow logic, additional validation checks, or support for new Earth
    system data use cases, please open an issue on
-   the [issue tracker](https://github.com/precog-ocean/precog-data-intake/issues) describing the motivation and expected
+   the [issue tracker](https://github.com/precog-ocean/precog-esgf-intake/issues) describing the motivation and expected
    behavior.
 
 3. **Submit Pull Requests**  
@@ -44,7 +44,7 @@ There are several ways to contribute to this project:
     - Add or update tests under `tests/` when changing functionality.
     - Update `README.md` and notebooks if your change affects usage or workflow behavior.
     - Open a pull request against the main branch of the upstream
-      repository: [precog-ocean/precog-data-intake](https://github.com/precog-ocean/precog-data-intake).
+      repository: [precog-ocean/precog-esgf-intake](https://github.com/precog-ocean/precog-esgf-intake).
 
 ## Getting Started
 
