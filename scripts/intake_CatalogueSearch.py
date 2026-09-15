@@ -137,8 +137,7 @@ for oceanvar in variable_ids:
         # Complete TODO add function to esgf-intake catalog.py file, so that download is not automatic, ...
         # rather we'd like to retrieve the attributes from the search across all nodes into a DataFrame ...
         # so we can see what is available and where, and do further filtering without having to download heaps of data unnecessarily.
-        info = cat.infos_to_dict(
-            quiet=False)  # dictionary structure containing all the urls, SHA256 hashes to enable serialised download
+        info = cat.infos_to_dict(quiet=False)  # dictionary structure containing all the urls, SHA256 hashes to enable serialized download
         DataFrameSearch = pd.DataFrame.from_dict(info['https'])  # all with monthly piControl and historical salinity and potential temperature
 
         # Complete TODO split file name so that columns also display the following facets
