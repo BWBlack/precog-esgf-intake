@@ -19,17 +19,55 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__name__)))
 
 def import_ocean_var_dataframes():
-    DL_ocean_var_path = input("Indicate path where dataframes 'DF_Downloadbale_XXX.xlsx' for ocean variables 'XXX' are saved:\n")
-    DL_ocean_var_path = Path(DL_ocean_var_path.strip(" "))
+    user_path = input(
+        "Indicate either:\n"
+        "1. the folder where dataframes 'DF_Downloadable_XXX.xlsx' are saved, or\n"
+        "2. the full path to a single dataframe file 'DF_Downloadable_XXX.xlsx':\n"
+    )
+    user_path = Path(user_path.strip(" ")).expanduser()
 
-    DF_master = pd.DataFrame()
-    # import DFs
-    for file in os.listdir(DL_ocean_var_path):
-        if 'DF_Downloadable' in file and file.endswith(".xlsx") and not ('areacello' in file or 'volcello' in file):
-            df_filename = os.path.join(DL_ocean_var_path, file)
-            DF_dummy = pd.read_excel(df_filename, engine='openpyxl')
-            DF_master = pd.concat([DF_master, DF_dummy])
-    return DF_master
+    if user_path.exists() is False:
+        raise FileNotFoundError(f"Path does not exist: {user_path}")
+
+    # case 1: user provided a single dataframe file
+    if user_path.is_file():
+        if user_path.suffix != ".xlsx":
+            raise ValueError(
+                f"Expected an .xlsx file, got: {user_path}"
+            )
+
+        print(f"Importing single dataframe file: {user_path}")
+        DF_master = pd.read_excel(user_path, engine='openpyxl')
+        return DF_master
+
+    # case 2: user provided a directory containing multiple dataframe files
+    if user_path.is_dir():
+        DF_master = pd.DataFrame()
+        matched_files = []
+
+        for file in os.listdir(user_path):
+            if (
+                'DF_Downloadable' in file
+                and file.endswith(".xlsx")
+                and not ('areacello' in file or 'volcello' in file)
+            ):
+                df_filename = os.path.join(user_path, file)
+                DF_dummy = pd.read_excel(df_filename, engine='openpyxl')
+                DF_master = pd.concat([DF_master, DF_dummy], ignore_index=True)
+                matched_files.append(file)
+
+        if len(matched_files) == 0:
+            raise FileNotFoundError(
+                f"No matching 'DF_Downloadable_*.xlsx' files found in directory: {user_path}"
+            )
+
+        print(f"Imported {len(matched_files)} dataframe file(s):")
+        for file in matched_files:
+            print(f" - {file}")
+
+        return DF_master
+
+    raise ValueError(f"Path is neither a file nor a directory: {user_path}")
 
 def varcell_prepare_df(logger_name, variable_id):
 
@@ -51,7 +89,7 @@ def varcell_prepare_df(logger_name, variable_id):
         # activity_drs=['CMIP', 'ScenarioMIP'],
         # experiment_id=['piControl', 'historical'],
         source_id = models_target,
-        variable_id = var,
+        variable_id = variable_id,
     )
 
     print(cat)
@@ -295,10 +333,9 @@ if __name__ == "__main__":
     else:
         logger1.info(f'File {filename} found.')
         u_response = input(f"Type 'new' if you want a new catalogue search for {var}.\nAlternatively, type 'skip' to trigger downloads using existing Dataframe file {filename}:\n")
-        if u_response.lower().strip(" ") == 'new':
+        if u_response.lower().strip() == "'new'":
             logger1.info('Starting new catalogue search...')
             varcell_prepare_df(logger_name=str(var), variable_id=var)
-
 
     ####### SENSE CHECK: IMPORTING UPDATED or EXISTING DATAFRAMES FOR CELL MEASURES #######
     print(f"Now either drag onto terminal or type path to Dataframe with the Filtered ESGF search results for var {var}:")
