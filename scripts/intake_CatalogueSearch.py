@@ -61,14 +61,15 @@ print("###########")
 # models_carb_exp = cat.df['source_id'].unique().sort()
 
 # WHAT WE ARE INTERESTED IN
-print("The search will consider as default:")
-print("###########")
-DefaultSearchParam = {"project" : ['CMIP6'],
-            "activity_drs" : ['CMIP', 'ScenarioMIP'],
-            "experiment_id" : ['piControl', 'historical'],
-            "frequency" : ['mon'],
-            "variable_id" : ['user choice'],
-            "grid_label" : ['gn', 'gr']}
+print("========== The search will consider as default: ========== ")
+DefaultSearchParam = {
+    "project": ['CMIP6'],
+    "activity_drs": ['CMIP', 'ScenarioMIP'],
+    "experiment_id": ['piControl', 'historical'],
+    "frequency": ['mon'],
+    "variable_id": [],
+    "grid_label": ['gn', 'gr']
+}
 for key, value in DefaultSearchParam.items():
     print(f"{key}: {value}")
 print("###########")
