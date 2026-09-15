@@ -195,9 +195,8 @@ if combine.lower().strip(" ") in ['y', 'yes']:
 
 
     logger.info(f'Traversing urls to test server responses for combined vars {chosen_vars}')
-    logger.info(f'This might take a few minutes... Coffee time?')
     print_coffee()
-
+    logger.info(f'This might take a few minutes... Coffee time?')
     df_downloadable_tested = link_traverser(df_downloadable, logger_name=loglabelstr)
     save_searched_tests(df_downloadable_tested=df_downloadable_tested, downloadpath=download_path)
     logger.info(f'Traversing complete for vars {chosen_vars}\n')
