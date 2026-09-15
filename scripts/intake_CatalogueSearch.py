@@ -227,7 +227,9 @@ else:
         # now we have a list of models to keep and also have a reduced dataframe containing all pre-downloadable files ('df_downloadable').
         # But still need to check if the files can actually be retrieved from endpoints
         # Saving Dataframe searches after performing url checks that tell us if the files can actually be retrieved from endpoints
-        logger.info(f'Traversing urls to test server responses for var {chosen_vars}')
+        logger.info(f'Traversing urls to test server responses for combined vars {chosen_vars}')
+        print_coffee()
+        logger.info(f'This might take a few minutes... Coffee time?')
         df_downloadable_tested = link_traverser(df_downloadable, logger_name=loglabelstr)
 
         save_searched_tests(df_downloadable_tested=df_downloadable_tested, downloadpath=download_path)
