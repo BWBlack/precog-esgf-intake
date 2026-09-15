@@ -17,6 +17,7 @@ from ascii_magic import AsciiArt
 import datetime
 import sys
 import shlex
+import tomllib
 
 sys.path.append(os.path.dirname(os.path.abspath(__name__)))
 
