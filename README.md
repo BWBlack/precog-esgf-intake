@@ -35,7 +35,7 @@ These instructions assume you have **Python 3.12+** installed and available as `
 
 ```bash
 git clone https://github.com/precog-ocean/precog-data-intake.git
-cd precog-data-intake
+cd precog-esgf-intake
 ````
 
 ### 2. Create a virtual environment (named `venv`)
