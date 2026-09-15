@@ -45,20 +45,6 @@ intake_esgf.conf.set(all_indices=False,
 print('\n')
 print("======= Printing config. set up for the upcoming ESGF search =======")
 print(intake_esgf.conf)
-print("###########")
-
-# example of usa to scrape for expc
-# cat = ESGFCatalog().search(
-#     project='CMIP6',
-#     activity_drs=['CMIP', 'ScenarioMIP'],
-#     experiment_id=['piControl', 'historical'],
-#     frequency='yr',
-#     variable_id='expc',
-# )
-#
-# print(cat)
-# len(cat.df['source_id'].unique())  # n models with cexp
-# models_carb_exp = cat.df['source_id'].unique().sort()
 
 # WHAT WE ARE INTERESTED IN
 print("========== The search will consider as default: ========== ")
@@ -107,7 +93,6 @@ experiments_must_haves = DefaultSearchParam["experiment_id"]
 root_proj = os.path.dirname(os.path.abspath(__name__))
 std_names = import_ocean_std_names(root_proj)
 
-#variables_of_interest = ['expc', 'o2', 'thetao', 'so', 'epc100', 'intdic', 'intpoc'] # default hard-backed list of variables of interest # Complete-TODO assimilate a list of all possible varnames that are valid
 variables_of_interest = std_names
 DicDataframeSearches = {'variable_names': [], 'search_results':[]} #initializing empty dic to facilitate saving data
 
