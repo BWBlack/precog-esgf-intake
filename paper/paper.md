@@ -67,13 +67,13 @@ within their computational and storage constraints.
 Furthermore, by automating the retrieval and validation of CMIP grid metrics like `volcello` , `areacello` as default
 (and enabling further bespoke searches for `deptho` or `thkcello` as a validated substitutes when
 `volcello` is unavailable) — `precog-data-intake` reduces the need for users to understand CMIP metadata and ESGF
-directory conventions. By wrapping ESGF discovery in a simple Python CLI and allowing users to tailor searches by editing a straightforward `search_criteria.toml` configuration file, the
-package supports both accessible default workflows and more bespoke dataset selection. This lowers the barrier for researchers
+directory conventions. By wrapping ESGF discovery in a simple Python CLI and allowing users to tailor searches by
+editing a straightforward `search_criteria.toml` configuration file, the
+package supports both accessible default workflows and more bespoke dataset selection. This lowers the barrier for
+researchers
 new to CMIP while enabling experienced users to specify models, experiments, variables, frequencies, and other search
 constraints. Its lightweight design also supports terminal-based HPC workflows, allowing data discovery and ingestion
-from visualisation nodes and Jupyter sessions rather than interactive web portals or manual downloads. The use of
-standardized variable names and programmatic search reflects the broader direction of CMIP data access toward
-catalogue-based and Python-accessible workflows.
+from visualisation nodes and Jupyter sessions rather than interactive web portals or manual downloads.
 
 # State of the field
 
@@ -96,6 +96,7 @@ subset of model output that satisfies practical and scientific constraints.
 
 The software provides several features tailored to archive-scale Earth system data workflows:
 
+- Definition of ESGF search criteria by modifying a `search_criteria.toml` configuration file.
 - automated ESGF node-based searches using project, activity, experiment, frequency, variable, and grid filters
   (inherited from `intake-esgf`);
 - interactive user prompts for download paths and variable selections within CLI workflows;
@@ -120,13 +121,14 @@ The software provides several features tailored to archive-scale Earth system da
 moving directly from catalogue search to cached download, the software separates archive interrogation, shortlist
 generation, downloadability checks, and file retrieval into distinct command-line steps, allowing users to inspect and
 validate intermediate results before proceeding. In a typical workflow (Figure 1), the user first specifies a parent
-download directory and one or more target variables. The catalogue search stage then queries ESGF holdings for matching
-CMIP products (CMIP6 as the default option), filters results to retain scientifically relevant combinations such as
-paired `piControl` and `historical` simulations, and
-exports tabular search summaries for inspection. Subsequent stages verify whether shortlisted files are reachable on
-remote nodes, assign local destination
-paths, and download both target variables and required supporting grid-cell measures such as `areacello` and `volcello`.
-This staged design is intended to improve transparency and reproducibility in archive-based Earth system workflows. By
+download directory and one or more target variables. The workflow supports a user-editable
+`search_criteria.toml` file that can predefine ESGF search facets, including project, experiments, frequency, variables,
+and grid labels, while still allowing interactive entry of variable_id when that field is intentionally left blank.
+The catalogue search stage then queries ESGF holdings for matching CMIP products (CMIP6 as the default option), filters
+results to retain scientifically relevant combinations such as
+paired `piControl` and `historical` simulations, and exports tabular search summaries for inspection. Subsequent stages
+verify whether shortlisted files are reachable on remote nodes, assign local destination paths, and download both target variables and required supporting grid-cell
+measures such as `areacello` and `volcello`. This staged design is intended to improve transparency and reproducibility in archive-based Earth system workflows. By
 treating search results, validation outputs, and downloadable file lists as explicit intermediate artifacts, the
 software supports both interactive use and later auditing of dataset selection decisions.
 
@@ -142,16 +144,18 @@ A representative use case is the identification of CMIP6 models that simultaneou
 and historical outputs for ocean biogeochemical variables such as `expc` and `epc100`, together with auxiliary or
 supporting variables and the associated grid-cell measures required for downstream analyses. The repository
 accompanying this software includes
-a [workflow example](https://github.com/LeoBertini/precog-data-intake/blob/main/Workflow_Example_POCflux.ipynb) 
+a [workflow example](https://github.com/LeoBertini/precog-data-intake/blob/main/Workflow_Example_POCflux.ipynb)
 demonstrating this type of archive screening and retrieval process.
 
 This is particularly relevant for ocean biogeochemistry and carbon-cycle studies, where analyses often
 depend on coherent combinations of physical and biogeochemical fields rather than isolated variables (e.g., retrieval of
 carbonate system fields as well as ocean state physical variables, [@Wilson2022]). In such cases, the time spent
 screening archive holdings, checking consistency, and organising downloads can be substantial, and purpose-built
-automation improves both efficiency and reproducibility. This data discovery and retrieval functionality by 
-`precog-data-intake` is also complementary to established CMIP preprocessing packages such as xMIP [@xMIP] and ESMValTool [@ESMValTool] , which provide tools for harmonising, 
-cataloguing, and preparing model outputs for analysis; together, these packages support a reproducible workflow from archive discovery and dataset selection
+automation improves both efficiency and reproducibility. This data discovery and retrieval functionality by
+`precog-data-intake` is also complementary to established CMIP preprocessing packages such as xMIP [@xMIP] and
+ESMValTool [@ESMValTool] , which provide tools for harmonising,
+cataloguing, and preparing model outputs for analysis; together, these packages support a reproducible workflow from
+archive discovery and dataset selection
 through to preprocessing and scientific analysis
 
 Therefore, `precog-data-intake` fills a workflow gap between catalogue access and scientific analysis. The software
