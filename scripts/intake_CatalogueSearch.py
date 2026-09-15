@@ -78,11 +78,23 @@ print("====================================================================\n")
 search_criteria_toml = Path(__file__).resolve().parent / "search_criteria.toml"
 chosen_vars_from_toml = None
 
-# user prompt for cell measures
-var = input("Please enter a list of strings for variable_id. E.g. ['expc'] or multiple ['expc', 'o2', 'thetao', 'so', 'o2sat', 'epc100']:\n")
-var = var.strip(" ")
-print(f"User entered variable_ids: {var}")
-variable_ids = eval(var)
+if search_criteria_toml.is_file():
+    print(f"Detected TOML search criteria file at: {search_criteria_toml}")
+    config_search = load_search_criteria_toml(search_criteria_toml)
+
+    # overwrite the defaults with TOML-defined values
+    DefaultSearchParam.update(config_search["search"])
+
+# if variable list is still empty, prompt user interactively
+if len(DefaultSearchParam["variable_id"]) == 0:
+    var = input(
+        "No variable_id values were provided in search_criteria.toml.\n"
+        "Please enter a list of strings for variable_id. "
+        "E.g. ['expc'] or multiple ['expc', 'o2', 'thetao', 'so', 'o2sat', 'epc100']:\n"
+    )
+    var = var.strip(" ")
+    print(f"User entered variable_ids: {var}")
+    DefaultSearchParam["variable_id"] = ast.literal_eval(var)
 
 experiments_must_haves = ['piControl', 'historical'] # must have PI and historical in the search.
 
