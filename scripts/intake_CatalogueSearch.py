@@ -42,9 +42,8 @@ original_cache_path = '~/.esgf/'
 intake_esgf.conf.set(all_indices=False,
                      local_cache=download_path,
                      confirm_download=True)
-
-print("Printing config. set up for the upcoming ESGF search ...\n")
-print("###########")
+print('\n')
+print("======= Printing config. set up for the upcoming ESGF search =======")
 print(intake_esgf.conf)
 print("###########")
 
