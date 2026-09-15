@@ -167,8 +167,10 @@ with pd.ExcelWriter(filename, engine='openpyxl') as writer:
         result = DicDataframeSearches['search_results'][idx]
         result.to_excel(writer, sheet_name=oceanvarname)
 
-print(f"###### Catalogue Scraping complete and raw search results saved as a Dataframe on ...")
-print(f"{filename} \n")
+print("===============================================================================")
+print(f"Catalogue Scraping complete and raw search results saved as a Dataframe on ...")
+print(f"{filename}")
+print("===============================================================================\n")
 
 #########################
 print('Now checking if we have complete piControl and Historical runs and consistent availability of grids...')
