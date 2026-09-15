@@ -29,6 +29,12 @@ def print_precog_header():
     print("\n" * 2)
     return None
 
+def print_coffee():
+    print("\n" * 2)
+    my_art = AsciiArt.from_image('./misc_images/CoffeeMug.png')  # path to logo image
+    my_art.to_terminal(columns=80, width_ratio=3)
+    print("\n" * 2)
+    return None
 
 def print_precog_footer():
     end_art = AsciiArt.from_image('./misc_images/squid2.png')

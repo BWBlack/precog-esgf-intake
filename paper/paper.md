@@ -37,12 +37,14 @@ shortlisted Earth System Model data products.
 # Statement of need
 
 Modern Earth System science workflows frequently rely on climate-model data distributed across Earth System Grid
-Federation [(ESGF)](https://esgf.github.io/index.html) nodes [@ESGFAggregation]. In the context of marine
-biogeochemistry for instance, Couple Model Intercomparisson Project analyses centre on
-evaluating how Earth System Models simulate changes in ocean carbon, oxygen and nutrient fields and fluxes, quantifying
-multi‑model biases and uncertainties to constrain future projections of ocean carbon inventories for example
-[@Wilson2022]. Although ESGF provides a federated infrastructure for searching and accessing these archives,
-practical research workflows often require additional automation to determine whether a given combination of variables,
+Federation [(ESGF)](https://esgf.github.io/index.html) nodes [@ESGFAggregation]. For example, a Coupled Model
+Intercomparison Project (CMIP) analysis to constrain future projections in ocean carbon inventories requires
+standardized output of ocean biogeochemical variables (carbon, oxygen, nutrients) across many models and
+experiments[@Wilson2022].
+These archived data are often distributed across many federated storage nodes, including duplicated,
+incomplete or corrupted versions. Although ESGF provides a federated infrastructure for searching and accessing these
+archives, practical research workflows often require additional automation to determine whether a given combination of
+variables,
 experiments, ensemble members, and grid configurations is both scientifically suitable and operationally downloadable
 before substantial time is spent retrieving files.
 
@@ -62,20 +64,24 @@ reproducible downstream analysis. This workflow is particularly useful when rese
 models and variables before selecting datasets that are both scientifically appropriate and operationally accessible
 within their computational and storage constraints.
 
-Furthermore, by wrapping ESGF discovery and CMIP variable conventions (including less familiar fields like `volcello`,
-`areacello`, and input validation when searching for any `variable` of interest) behind a simple, high‑level Python
-CLI interface, `precog-data-intake` lowers the barrier for researchers new to CMIP and the ESGF ecosystem to find,
-load, and start analysing Earth System Model outputs without the need for mastering CMIP metadata and directory
-conventions. The simple design also enables `precog-data-intake` to be used directly in terminal-based HPC environments,
-allowing users to run data discovery and ingestion from visualization nodes and Jupyter sessions instead of
-relying on interactive web interfaces or manual downloads.
+Furthermore, by automating the retrieval and validation of CMIP grid metrics like `volcello` , `areacello` as default
+(and enabling further bespoke searches for `deptho` or `thkcello` as a validated substitutes when
+`volcello` is unavailable) — `precog-data-intake` reduces the need for users to understand CMIP metadata and ESGF
+directory conventions. By wrapping ESGF discovery in a simple Python CLI and allowing users to tailor searches by editing a straightforward `search_criteria.toml` configuration file, the
+package supports both accessible default workflows and more bespoke dataset selection. This lowers the barrier for researchers
+new to CMIP while enabling experienced users to specify models, experiments, variables, frequencies, and other search
+constraints. Its lightweight design also supports terminal-based HPC workflows, allowing data discovery and ingestion
+from visualisation nodes and Jupyter sessions rather than interactive web portals or manual downloads. The use of
+standardized variable names and programmatic search reflects the broader direction of CMIP data access toward
+catalogue-based and Python-accessible workflows.
 
 # State of the field
 
-CMIP data are currently distributed through the ESGF metagrid web application, which provides web-based discovery and
+CMIP data are currently accessible through the ESGF metagrid web application, which provides web-based discovery and
 download services for CMIP5, CMIP6, CMIP6Plus, and the upcoming CMIP7 phases. Recent development efforts have focused on
 analysis-ready, cloud-optimised approaches based on in-memory object storage [@Mizielinski2026], with catalogue sweep
-tools enabling more scalable access through Python and xarray, while community evaluation frameworks like ESMValTool[@ESMValTool]
+tools enabling more scalable access through Python and xarray, while community evaluation frameworks like
+ESMValTool[@ESMValTool]
 supporting integrated diagnostics for benchmarking model outputs.
 
 `precog-data-intake` builds on the ESGF catalogue node sweeping implementation from `intake-esgf`
@@ -136,14 +142,17 @@ A representative use case is the identification of CMIP6 models that simultaneou
 and historical outputs for ocean biogeochemical variables such as `expc` and `epc100`, together with auxiliary or
 supporting variables and the associated grid-cell measures required for downstream analyses. The repository
 accompanying this software includes
-a [workflow example](https://github.com/LeoBertini/precog-data-intake/blob/main/Workflow_Example_POCflux.ipynb)
+a [workflow example](https://github.com/LeoBertini/precog-data-intake/blob/main/Workflow_Example_POCflux.ipynb) 
 demonstrating this type of archive screening and retrieval process.
 
-This is particularly relevant for ocean biogeochemistry and carbon-cycle studies for example, where analyses often
+This is particularly relevant for ocean biogeochemistry and carbon-cycle studies, where analyses often
 depend on coherent combinations of physical and biogeochemical fields rather than isolated variables (e.g., retrieval of
-carbonate system fields as well as ocean state physical variables, [@Wilson2022]). In such cases, the time spent screening archive
-holdings, checking consistency, and organising downloads can be substantial, and purpose-built
-automation improves both efficiency and reproducibility.
+carbonate system fields as well as ocean state physical variables, [@Wilson2022]). In such cases, the time spent
+screening archive holdings, checking consistency, and organising downloads can be substantial, and purpose-built
+automation improves both efficiency and reproducibility. This data discovery and retrieval functionality by 
+`precog-data-intake` is also complementary to established CMIP preprocessing packages such as xMIP [@xMIP] and ESMValTool [@ESMValTool] , which provide tools for harmonising, 
+cataloguing, and preparing model outputs for analysis; together, these packages support a reproducible workflow from archive discovery and dataset selection
+through to preprocessing and scientific analysis
 
 Therefore, `precog-data-intake` fills a workflow gap between catalogue access and scientific analysis. The software
 capabilities support workflows in which data access is itself a significant part of the scientific process,
