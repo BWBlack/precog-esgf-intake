@@ -96,7 +96,13 @@ if len(DefaultSearchParam["variable_id"]) == 0:
     print(f"User entered variable_ids: {var}")
     DefaultSearchParam["variable_id"] = ast.literal_eval(var)
 
-experiments_must_haves = ['piControl', 'historical'] # must have PI and historical in the search.
+print("======== Running ESGF search with the following resolved criteria ======== ")
+for key, value in DefaultSearchParam.items():
+    print(f"{key}: {value}")
+print("====================================================================\n")
+
+variable_ids = DefaultSearchParam["variable_id"]
+experiments_must_haves = DefaultSearchParam["experiment_id"]
 
 root_proj = os.path.dirname(os.path.abspath(__name__))
 std_names = import_ocean_std_names(root_proj)
