@@ -17,6 +17,7 @@ from ascii_magic import AsciiArt
 import datetime
 import sys
 import shlex
+import tomllib
 
 sys.path.append(os.path.dirname(os.path.abspath(__name__)))
 
@@ -34,6 +35,104 @@ def print_precog_footer():
     end_art.to_terminal(columns=80, width_ratio=2.5)
     print("\n" * 2)
     return None
+
+
+def load_search_criteria_toml(search_criteria_path):
+    """
+    Load and validate a TOML file containing ESGF search criteria.
+
+    Expected structure
+    ------------------
+    [search]
+    project = ["CMIP6"]
+    activity_drs = ["CMIP", "ScenarioMIP"]
+    experiment_id = ["piControl", "historical"]
+    frequency = ["mon"]
+    variable_id = ["expc", "o2"]
+    grid_label = ["gn", "gr"]
+
+    Parameters
+    ----------
+    search_criteria_path : str or pathlib.Path
+        Path to the TOML file to read.
+
+    Returns
+    -------
+    dict
+        Dictionary with validated search criteria and validation options.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the TOML file does not exist.
+    KeyError
+        If required sections or keys are missing.
+    TypeError
+        If fields are of the wrong type.
+    ValueError
+        If logically invalid combinations are found.
+    """
+    search_criteria_path = Path(search_criteria_path).expanduser()
+
+    if search_criteria_path.is_file() is False:
+        raise FileNotFoundError(f"Could not find TOML search criteria file: {search_criteria_path}")
+
+    with open(search_criteria_path, "rb") as handle:
+        config = tomllib.load(handle)
+
+    if "search" not in config:
+        raise KeyError("Missing required [search] section in TOML file.")
+
+    search_defaults = {
+        "project": ["CMIP6"],
+        "activity_drs": ["CMIP", "ScenarioMIP"],
+        "experiment_id": ["piControl", "historical"],
+        "frequency": ["mon"],
+        "variable_id": [],
+        "grid_label": ["gn", "gr"],
+    }
+
+    search_cfg = config.get("search", {})
+
+    search_final = {**search_defaults, **search_cfg}
+
+    required_list_fields = [
+        "project",
+        "activity_drs",
+        "experiment_id",
+        "frequency",
+        "variable_id",
+        "grid_label",
+    ]
+
+    for field in required_list_fields:
+        if isinstance(search_final[field], str):
+            search_final[field] = [search_final[field]]
+
+        if isinstance(search_final[field], list) is False:
+            raise TypeError(
+                f"Field [search].{field} must be a list of strings or a single string."
+            )
+
+        if all(isinstance(item, str) for item in search_final[field]) is False:
+            raise TypeError(
+                f"Field [search].{field} must contain only strings."
+            )
+
+    if len(search_final["variable_id"]) == 0:
+        print("Field [search].variable_id is empty in TOML file. Script will prompt user interactively.")
+
+    final_config = {
+        "search": search_final,
+    }
+
+    print("The search will consider the following criteria from TOML:")
+    print("###########")
+    for key, value in final_config["search"].items():
+        print(f"{key}: {value}")
+    print("###########")
+
+    return final_config
 
 
 def append_cols(PandasDataFrame):

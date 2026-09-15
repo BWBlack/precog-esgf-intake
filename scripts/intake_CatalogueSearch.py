@@ -42,61 +42,78 @@ original_cache_path = '~/.esgf/'
 intake_esgf.conf.set(all_indices=False,
                      local_cache=download_path,
                      confirm_download=True)
-
-print("Printing config. set up for the upcoming ESGF search ...\n")
-print("###########")
+print('\n')
+print("======= Printing config. set up for the upcoming ESGF search =======")
 print(intake_esgf.conf)
-print("###########")
-
-# example of usa to scrape for expc
-# cat = ESGFCatalog().search(
-#     project='CMIP6',
-#     activity_drs=['CMIP', 'ScenarioMIP'],
-#     experiment_id=['piControl', 'historical'],
-#     frequency='yr',
-#     variable_id='expc',
-# )
-#
-# print(cat)
-# len(cat.df['source_id'].unique())  # n models with cexp
-# models_carb_exp = cat.df['source_id'].unique().sort()
 
 # WHAT WE ARE INTERESTED IN
-print("The search will consider as default:")
-print("###########")
-DefaultSearchParam = {"project" : ['CMIP6'],
-            "activity_drs" : ['CMIP', 'ScenarioMIP'],
-            "experiment_id" : ['piControl', 'historical'],
-            "frequency" : ['mon'],
-            "variable_id" : ['user choice'],
-            "grid_label" : ['gn', 'gr']}
+print("========== The search will consider as default: ========== ")
+DefaultSearchParam = {
+    "project": ['CMIP6'],
+    "activity_drs": ['CMIP', 'ScenarioMIP'],
+    "experiment_id": ['piControl', 'historical'],
+    "frequency": ['mon'],
+    "variable_id": [],
+    "grid_label": ['gn', 'gr']
+}
 for key, value in DefaultSearchParam.items():
     print(f"{key}: {value}")
-print("###########")
+print("====================================================================\n")
 
-# user prompt for cell measures
-var = input("Please enter a list of strings for variable_id. E.g. ['expc'] or multiple ['expc', 'o2', 'thetao', 'so', 'o2sat', 'epc100']:\n")
-var = var.strip(" ")
-print(f"User entered variable_ids: {var}")
-variable_ids = eval(var)
+# overwrite defaults from TOML file if provided
+search_criteria_toml = Path(__file__).resolve().parent / "search_criteria.toml"
+chosen_vars_from_toml = None
 
-experiments_must_haves = ['piControl', 'historical'] # must have PI and historical in the search.
+if search_criteria_toml.is_file():
+    print(f"Detected TOML search criteria file at: {search_criteria_toml}")
+    config_search = load_search_criteria_toml(search_criteria_toml)
+
+    # overwrite the defaults with TOML-defined values
+    DefaultSearchParam.update(config_search["search"])
+
+# if variable list is still empty, prompt user interactively
+if len(DefaultSearchParam["variable_id"]) == 0:
+    var = input(
+        "No variable_id values were provided in search_criteria.toml.\n"
+        "Please enter a list of strings for variable_id. "
+        "E.g. ['expc'] or multiple ['expc', 'o2', 'thetao', 'so', 'o2sat', 'epc100']:\n"
+    )
+    var = var.strip(" ")
+    print(f"User entered variable_ids: {var}")
+    DefaultSearchParam["variable_id"] = ast.literal_eval(var)
+
+print("======== Running ESGF search with the following resolved criteria ======== ")
+for key, value in DefaultSearchParam.items():
+    print(f"{key}: {value}")
+print("====================================================================\n")
+
+variable_ids = DefaultSearchParam["variable_id"]
+experiments_must_haves = DefaultSearchParam["experiment_id"]
 
 root_proj = os.path.dirname(os.path.abspath(__name__))
 std_names = import_ocean_std_names(root_proj)
 
-#variables_of_interest = ['expc', 'o2', 'thetao', 'so', 'epc100', 'intdic', 'intpoc'] # default hard-backed list of variables of interest # Complete-TODO assimilate a list of all possible varnames that are valid
 variables_of_interest = std_names
-DicDataframeSearches = {'variable_names': [], 'search_results':[]} #initialising empty dic to facilitate saving data
+DicDataframeSearches = {'variable_names': [], 'search_results':[]} #initializing empty dic to facilitate saving data
+
+##
+search_project = DefaultSearchParam["project"]
+search_activity_drs = DefaultSearchParam["activity_drs"]
+search_experiment_id = DefaultSearchParam["experiment_id"]
+search_frequency = DefaultSearchParam["frequency"]
+search_grid_label = DefaultSearchParam["grid_label"]
+##
 
 for oceanvar in variable_ids:
     if oceanvar.lower() in variables_of_interest:
-        cat =ESGFCatalog().search(project='CMIP6',
-                                    activity_drs=['CMIP', 'ScenarioMIP'],
-                                    experiment_id=['piControl', 'historical'],
-                                    frequency='mon',
-                                    variable_id= oceanvar,
-                                    grid_label=['gn', 'gr'])
+        cat = ESGFCatalog().search(
+            project=search_project,
+            activity_drs=search_activity_drs,
+            experiment_id=search_experiment_id,
+            frequency=search_frequency,
+            variable_id=oceanvar,
+            grid_label=search_grid_label
+        )
 
         print(cat.model_groups().to_string())
         cat = cat.remove_ensembles()  # filters out to keep only a single member from the ensemble (i.e., the one with the lowest variant label (see below)
@@ -105,8 +122,7 @@ for oceanvar in variable_ids:
         # Complete TODO add function to esgf-intake catalog.py file, so that download is not automatic, ...
         # rather we'd like to retrieve the attributes from the search across all nodes into a DataFrame ...
         # so we can see what is available and where, and do further filtering without having to download heaps of data unnecessarily.
-        info = cat.infos_to_dict(
-            quiet=False)  # dictionary structure containing all the urls, SHA256 hashes to enable serialised download
+        info = cat.infos_to_dict(quiet=False)  # dictionary structure containing all the urls, SHA256 hashes to enable serialized download
         DataFrameSearch = pd.DataFrame.from_dict(info['https'])  # all with monthly piControl and historical salinity and potential temperature
 
         # Complete TODO split file name so that columns also display the following facets
@@ -135,8 +151,10 @@ with pd.ExcelWriter(filename, engine='openpyxl') as writer:
         result = DicDataframeSearches['search_results'][idx]
         result.to_excel(writer, sheet_name=oceanvarname)
 
-print(f"###### Catalogue Scraping complete and raw search results saved as a Dataframe on ...")
-print(f"{filename} \n")
+print("===============================================================================")
+print(f"Catalogue Scraping complete and raw search results saved as a Dataframe on ...")
+print(f"{filename}")
+print("===============================================================================\n")
 
 #########################
 print('Now checking if we have complete piControl and Historical runs and consistent availability of grids...')
