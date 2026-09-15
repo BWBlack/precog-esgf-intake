@@ -72,7 +72,11 @@ DefaultSearchParam = {
 }
 for key, value in DefaultSearchParam.items():
     print(f"{key}: {value}")
-print("###########")
+print("====================================================================\n")
+
+# overwrite defaults from TOML file if provided
+search_criteria_toml = Path(__file__).resolve().parent / "search_criteria.toml"
+chosen_vars_from_toml = None
 
 # user prompt for cell measures
 var = input("Please enter a list of strings for variable_id. E.g. ['expc'] or multiple ['expc', 'o2', 'thetao', 'so', 'o2sat', 'epc100']:\n")
