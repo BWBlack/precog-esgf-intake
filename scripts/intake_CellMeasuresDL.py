@@ -51,7 +51,7 @@ def varcell_prepare_df(logger_name, variable_id):
         # activity_drs=['CMIP', 'ScenarioMIP'],
         # experiment_id=['piControl', 'historical'],
         source_id = models_target,
-        variable_id = var,
+        variable_id = variable_id,
     )
 
     print(cat)
