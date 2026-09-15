@@ -132,7 +132,7 @@ measures such as `areacello` and `volcello`. This staged design is intended to i
 treating search results, validation outputs, and downloadable file lists as explicit intermediate artifacts, the
 software supports both interactive use and later auditing of dataset selection decisions.
 
-![](data-intake-diagram.png)
+![](precog-esgf-intake-diagram.png)
 {width=90%}
 *Figure 1. precog-esgf-intake toolkit overview and directory structure of an example ESGF download. The top-level
 directory
