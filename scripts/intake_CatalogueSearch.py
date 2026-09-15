@@ -109,7 +109,15 @@ std_names = import_ocean_std_names(root_proj)
 
 #variables_of_interest = ['expc', 'o2', 'thetao', 'so', 'epc100', 'intdic', 'intpoc'] # default hard-backed list of variables of interest # Complete-TODO assimilate a list of all possible varnames that are valid
 variables_of_interest = std_names
-DicDataframeSearches = {'variable_names': [], 'search_results':[]} #initialising empty dic to facilitate saving data
+DicDataframeSearches = {'variable_names': [], 'search_results':[]} #initializing empty dic to facilitate saving data
+
+##
+search_project = DefaultSearchParam["project"]
+search_activity_drs = DefaultSearchParam["activity_drs"]
+search_experiment_id = DefaultSearchParam["experiment_id"]
+search_frequency = DefaultSearchParam["frequency"]
+search_grid_label = DefaultSearchParam["grid_label"]
+##
 
 for oceanvar in variable_ids:
     if oceanvar.lower() in variables_of_interest:
