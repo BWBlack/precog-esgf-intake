@@ -4,8 +4,6 @@ import random
 import textwrap
 import threading
 import subprocess
-from enum import unique
-
 import pandas as pd
 import time
 import logging
@@ -18,7 +16,6 @@ import datetime
 import sys
 import shlex
 import tomllib
-
 sys.path.append(os.path.dirname(os.path.abspath(__name__)))
 
 
@@ -402,7 +399,7 @@ def catalog_traverser(logger, CatalogDF, varlist):
                         else:
                             models_to_discard.append(model)
                             raise ValueError(
-                                f'Mismatch between available variant lables \n {df1_pi['variant_label'].unique()} is different from {df1_historical['variant_label'].unique()}')
+                                f'Mismatch between available variant lables \n {df1_pi["variant_label"].unique()} is different from {df1_historical["variant_label"].unique()}')
 
 
             else:

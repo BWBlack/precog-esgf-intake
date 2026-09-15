@@ -25,7 +25,6 @@ import xarray as xr
 
 import intake_esgf
 import intake_esgf.base as base
-from intake_esgf import IN_NOTEBOOK
 from intake_esgf.core import GlobusESGFIndex, SolrESGFIndex, STACESGFIndex
 from intake_esgf.core.globus import (
     create_globus_transfer,
@@ -44,11 +43,7 @@ from intake_esgf.exceptions import (
     ProjectHasNoFacet,
 )
 from intake_esgf.projects import projects as esgf_projects
-
-if IN_NOTEBOOK:
-    from tqdm import tqdm_notebook as tqdm  # type: ignore
-else:
-    from tqdm import tqdm  # type: ignore
+from tqdm import tqdm  # type: ignore
 
 
 def _get_cached_session() -> requests_cache.CachedSession:

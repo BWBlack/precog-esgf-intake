@@ -11,6 +11,7 @@ datasets.
 
 ## Features
 
+- Definition of ESGF search criteria by modifying a `search_criteria.toml` configuration file.
 - Automated search through the ESGF catalogue using project, variable, experiment, and temporal filters (inherited 
   from [intake-esgf](https://github.com/esgf2-us/intake-esgf));.
 - Verification of continuity of date stamps in CMIP6 Pre-Industrial (PI) and Historical runs.
@@ -34,7 +35,7 @@ These instructions assume you have **Python 3.12+** installed and available as `
 
 ```bash
 git clone https://github.com/precog-ocean/precog-data-intake.git
-cd precog-data-intake
+cd precog-esgf-intake
 ````
 
 ### 2. Create a virtual environment (named `venv`)
