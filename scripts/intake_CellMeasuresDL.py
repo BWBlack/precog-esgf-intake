@@ -337,6 +337,7 @@ if __name__ == "__main__":
             logger1.info('Starting new catalogue search...')
             varcell_prepare_df(logger_name=str(var), variable_id=var)
 
+
     ####### SENSE CHECK: IMPORTING UPDATED or EXISTING DATAFRAMES FOR CELL MEASURES #######
     print(f"Now either drag onto terminal or type path to Dataframe with the Filtered ESGF search results for var {var}:")
     df_filename = input()
