@@ -95,7 +95,7 @@ std_names = import_ocean_std_names(root_proj)
 
 variables_of_interest = std_names
 DicDataframeSearches = {'variable_names': [], 'search_results':[]} #initializing empty dic to facilitate saving data
-
+DicDataframePiAnchors = {'variable_names': [],'search_results': []}
 ##
 search_project = DefaultSearchParam["project"]
 search_activity_drs = DefaultSearchParam["activity_drs"]
