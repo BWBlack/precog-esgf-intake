@@ -1120,7 +1120,7 @@ def update_downloadable_column(df, logger_name, probe_bytes=2 ** 18):
 def save_searched_tests(df_downloadable_tested, downloadpath):
     df_name_dummy = df_downloadable_tested['variable_id'].unique().tolist()
     df_name = '_'.join(df_name_dummy)
-    fname = os.path.join(downloadpath, 'DF_Downloadable_' + df_name)
+    fname = os.path.join(downloadpath, file_prefix + "_" + df_name)
     with pd.ExcelWriter(fname + '.xlsx', engine='openpyxl') as writer:
         df_downloadable_tested.to_excel(writer)
 
