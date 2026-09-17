@@ -160,8 +160,13 @@ print("=========================================================================
 print('Now checking if we have complete piControl and Historical runs and consistent availability of grids...')
 combine=input("Would you like perform a 'union' validation to check for PI and Historical runs for > 1 ocean variable?\n"
               "This is equivalent to searching for CMIP6 models that have (var1 & var2 & varN) for both PI and Historical runs. Type [y/n]:")
+
+#Initializing dataframe objects
 DFCombined = pd.DataFrame(columns=DicDataframeSearches['search_results'][0].columns)
 
+# =========== ================= ======== #
+# =========== MAIN LOOP LOGIC   ======== #
+# =========== ================= ======== #
 
 if combine.lower().strip(" ") in ['y', 'yes']:
     input_chosen = input(f"Enter which variables from the search {DicDataframeSearches['variable_names']} to combine in the form ['var1', 'var2', 'varN']:")
@@ -173,7 +178,7 @@ if combine.lower().strip(" ") in ['y', 'yes']:
         loglabelstr = loglabelstr + var + "_"
     #loglabelstr = loglabelstr
 
-    # and add function to concatenate dataframes from dic of chosen vars
+    # and concatenate dataframes from dic of chosen vars
     for idx, oceanvarname in enumerate(DicDataframeSearches['variable_names']):
         result = DicDataframeSearches['search_results'][idx]
         print(result)
