@@ -476,6 +476,36 @@ def check_grid_avail(DataFrameSubsetModel, varlist, grid_labels, run, logger):
 
     return dict
 
+
+def save_tested_outputs_by_mode(df_downloadable_tested, downloadpath, ensemble_mode):
+    """
+    Save tested downloadable-search results using a filename prefix that
+    reflects the ensemble handling mode.
+
+    Parameters
+    ----------
+    df_downloadable_tested : pandas.DataFrame
+        DataFrame after link_traverser() checks.
+    downloadpath : str or pathlib.Path
+        Output directory for the spreadsheet.
+    ensemble_mode : str
+        Either 'single' or 'ensemble'.
+    """
+    prefix_map = {
+        "single": "DF_Downloadable",
+        "ensemble": "DF_Downloadable_Ensemble",
+    }
+
+    if ensemble_mode not in prefix_map:
+        raise ValueError(f"Unsupported ensemble_mode for saving outputs: {ensemble_mode}")
+
+    save_searched_tests(
+        df_downloadable_tested=df_downloadable_tested,
+        downloadpath=downloadpath,
+        file_prefix=prefix_map[ensemble_mode],
+    )
+
+
 def instantiate_logging_file(logfilename, logger_name):
     formatter_line_style = '%(asctime)s - %(levelname)-8s - %(message)s'
     # Create a logger

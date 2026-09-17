@@ -198,7 +198,11 @@ if combine.lower().strip(" ") in ['y', 'yes']:
     print_coffee()
     logger.info(f'This might take a few minutes... Coffee time?')
     df_downloadable_tested = link_traverser(df_downloadable, logger_name=loglabelstr)
-    save_searched_tests(df_downloadable_tested=df_downloadable_tested, downloadpath=download_path)
+    save_tested_outputs_by_mode(
+        df_downloadable_tested=df_downloadable_tested,
+        downloadpath=download_path,
+        ensemble_mode=ensemble_mode
+    )
     logger.info(f'Traversing complete for vars {chosen_vars}\n')
 
 else:
@@ -231,8 +235,12 @@ else:
         print_coffee()
         logger.info(f'This might take a few minutes... Coffee time?')
         df_downloadable_tested = link_traverser(df_downloadable, logger_name=loglabelstr)
-
-        save_searched_tests(df_downloadable_tested=df_downloadable_tested, downloadpath=download_path)
+        save_tested_outputs_by_mode(
+            df_downloadable_tested=df_downloadable_tested,
+            downloadpath=download_path,
+            ensemble_mode=ensemble_mode
+        )
+        #save_searched_tests(df_downloadable_tested=df_downloadable_tested, downloadpath=download_path)
         logger.info(f'Traversing complete for var {chosen_vars}\n')
 
 # #### SANITY CHECK #####
