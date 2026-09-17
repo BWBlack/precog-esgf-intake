@@ -1117,7 +1117,7 @@ def update_downloadable_column(df, logger_name, probe_bytes=2 ** 18):
         logger.info('All rows updated successfully')
     return df
 
-def save_searched_tests(df_downloadable_tested, downloadpath):
+def save_searched_tests(df_downloadable_tested, downloadpath, file_prefix):
     df_name_dummy = df_downloadable_tested['variable_id'].unique().tolist()
     df_name = '_'.join(df_name_dummy)
     fname = os.path.join(downloadpath, file_prefix + "_" + df_name)
