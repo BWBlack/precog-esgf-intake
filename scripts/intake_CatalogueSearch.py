@@ -254,6 +254,7 @@ else:
 ############
 # Motivational quote
 print_precog_footer()
+print("\n")
 logger.info(f'Data sweep complete.\nDataframes should have been saved at {download_path}')
 logger.info(f'Now giddy up and run "~/intake_OceanVarsDL.py" to download the data.')
 
