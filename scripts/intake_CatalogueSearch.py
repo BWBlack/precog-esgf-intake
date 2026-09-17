@@ -106,9 +106,9 @@ search_grid_label = DefaultSearchParam["grid_label"]
 
 ensemble_mode = input(
     "Choose ensemble handling mode:\n"
-    "'single' = this will return aligned members across piControl and historical runs (sharing the exact same "
+    "'single' = this will return members across piControl and historical runs (sharing the exact same "
     "variant label)\n"
-    "'ensemble' = lowest piControl anchor + all compatible historical variants\n"
+    "'ensemble' = lowest piControl variant as an anchor + all compatible historical variants\n"
     "Type [single/ensemble]: "
 ).strip().lower()
 
