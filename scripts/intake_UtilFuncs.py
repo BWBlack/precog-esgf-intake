@@ -454,8 +454,9 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
 
     df_downloadable = pd.DataFrame(columns=CatalogDF.columns)
 
-    for model in models:
-        df_model = CatalogDF.loc[CatalogDF['source_id'] == model].copy()
+    for model in sorted(CatalogDF['source_id'].dropna().unique().tolist()):
+        logger.info(f'\n')
+        logger.info(f"================ MODEL: {model} ================")
 
         variables_in = check_var_in(df_model, varlist)
         if not all(variables_in):
