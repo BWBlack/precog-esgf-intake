@@ -181,7 +181,27 @@ if combine.lower().strip(" ") in ['y', 'yes']:
 
    ## then pass to catalogue traverser
     logger = instantiate_logging_file(logfilename + '_' + loglabelstr + f"_{today}.txt" , logger_name=loglabelstr)
-    models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser(logger, DFCombined, chosen_vars)
+
+    # =========== ENSEMBLE MODE   ======== #
+    if ensemble_mode == "ensemble":
+
+        for idx, oceanvarname in enumerate(DicDataframePiAnchors['variable_names']):
+            if oceanvarname in chosen_vars:
+                result_pi = DicDataframePiAnchors['search_results'][idx]
+                DFCombinedPiAnchors = pd.concat([DFCombinedPiAnchors, result_pi], axis=0)
+
+        pi_anchor_keys = build_picontrol_anchor_keys(
+            PiAnchorDF=DFCombinedPiAnchors,
+            varlist=chosen_vars,
+            logger=logger)
+
+        logger.info("Running ensemble mode: lowest piControl anchor + all compatible historical members")
+        models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser_ensemble(logger, DFCombined, chosen_vars, pi_anchor_keys)
+
+    # =========== SINGLE MEMBER MODE   ======== #
+    else:
+        logger.info("Running single-member mode")
+        models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser(logger, DFCombined, chosen_vars)
 
     models_to_keep = df_downloadable['source_id'].unique().tolist()
     logger.info(f"Models with complete PI and Historical runs for {chosen_vars} in at least one consistent grid ('gn' or 'gr'):")
@@ -217,9 +237,27 @@ else:
         logger.info(f"User chose not to combine. Checking individual variables for PI and Historical run consistency and availability of grids...")
         logger.info(f"###### Testing {oceanvarname} next ######")
 
-        models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser(logger,
-                                                                                                 DicDataframeSearches['search_results'][idx],
-                                                                                                 chosen_vars)
+        # =========== ENSEMBLE MODE   ======== #
+        if ensemble_mode == "ensemble":
+
+            df_pi_anchor_single = DicDataframePiAnchors['search_results'][idx]
+
+            pi_anchor_keys = build_picontrol_anchor_keys(
+                PiAnchorDF=df_pi_anchor_single,
+                varlist=chosen_vars,
+                logger=logger)
+
+            logger.info("Running ensemble mode: lowest piControl anchor + all compatible historical members")
+            models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser_ensemble(logger,
+                                                                                                     DicDataframeSearches['search_results'][idx],
+                                                                                                     chosen_vars,
+                                                                                                     pi_anchor_keys)
+        # =========== SINGLE MEMBER MODE   ======== #
+        else:
+            logger.info("Running single-member mode")
+            models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser(logger,
+                                                                                                     DicDataframeSearches['search_results'][idx],
+                                                                                                     chosen_vars)
 
         models_to_keep = df_downloadable['source_id'].unique().tolist()
         logger.info(
