@@ -143,7 +143,7 @@ for oceanvar in variable_ids:
         DicDataframeSearches['variable_names'].append(oceanvar)
 
     else:
-        raise KeyError(f'Variable {var} not found in default variables of interest {variables_of_interest}')
+        raise KeyError(f'Variable {oceanvar} not found in default variables of interest {variables_of_interest}')
 
 #Saving search results to single spreadsheet with individual dataframes where each tab is an ocean variable dataframe
 with pd.ExcelWriter(filename, engine='openpyxl') as writer:
