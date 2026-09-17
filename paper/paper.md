@@ -13,6 +13,9 @@ authors:
   - name: Sam Ditkovsky
     orcid: 0000-0002-4759-9829
     affiliation: 1
+  - name: Benedict Blackledge
+    orcid: 0000-0003-0894-6776
+    affiliation: 1
   - name: Jamie D. Wilson
     orcid: 0000-0001-7509-4791
     affiliation: 1
@@ -96,41 +99,60 @@ subset of model output that satisfies practical and scientific constraints.
 
 The software provides several features tailored to archive-scale Earth system data workflows:
 
-- Definition of ESGF search criteria by modifying a `search_criteria.toml` configuration file.
-- automated ESGF node-based searches using project, activity, experiment, frequency, variable, and grid filters
-  (inherited from `intake-esgf`);
-- interactive user prompts for download paths and variable selections within CLI workflows;
-- bulk screening of CMIP6 archive holdings for paired `piControl` and `historical` availability;
-- validation of continuity in date stamps for CMIP6 pre-industrial and historical simulations;
-- checks for consistent availability of model output across compatible grids such as `gn` and `gr`;
-- conditional multi-variable screening for models that satisfy compound search criteria, including cases where several
-  required variables must be available simultaneously;
-- export of tabular ESGF catalogue search results for easy inspection, search snapshot logging, and reproducible
-  shortlist generation;
-- parallel URL pre-checks with verification of server responses and flagging of shortlisted outputs as downloadable,
-- download manager with parallel transfers that select responsive ESGF node locations and include retry or integrity
-  checks for corrupted files
-- in cases where the same file is available across many nodes, the fastest download option is prioritised based on the
-  user's connection
-- retrieval of ocean grid-cell measure variables such as `areacello` and `volcello` for selected models, together
-  with saved ESGF archive snapshots for later inspection.
+- Definition of ESGF search criteria by modifying a [`search_criteria.toml`](https://github.com/precog-ocean/precog-esgf-intake/blob/main/scripts/search_criteria.toml) configuration file.
+- Automated search through the ESGF catalogue using project, variable, experiment, and temporal filters (inherited 
+  from [intake-esgf](https://github.com/esgf2-us/intake-esgf)).
+- Ensemble-aware screening mode for selecting one validated `piControl` anchor branch and retaining all compatible `Historical` ensemble members on the same grid.
+- Single-branch screening mode for selecting one internally consistent `piControl/Historical` branch pairing per 
+  accepted model/grid.
+- Combined-variable screening for retaining models that provide all requested variables simultaneously across both 
+`piControl` and `historical` runs, producing a single shortlist for downstream download.
+- Verification and logging of continuity of date stamps and availability of `piControl` and `Historical` runs on 
+  consistent grids (e.g., regular grid `gr` and native grid `gn`).
+- Export of simple Dataframes for realised ESGF catalogue searches.
+- Verification of server responses and flagging shortlisted ESM outputs as 'Downloadable'.
+- Parallelized URL checks for fastest connection in case same data are available across different nodes.
+- Parallel batch downloading of files from multiple ESGF nodes with retry and integrity checks.
+- Parallel batch search and download of grid cell measures (e.g., `areacello` and `volcello`) with archive snapshot of
+  relaxed regex matches for later inspection.
+- Local directory layout optimised for downstream analysis.
+- Example Jupyter notebook workflow covering TOML setup, catalogue screening, and download preparation.
 
 # Software design and workflow overview
 
-`precog-esgf-intake` implements a staged workflow for archive-scale ESGF data discovery and retrieval. Rather than
-moving directly from catalogue search to cached download, the software separates archive interrogation, shortlist
-generation, downloadability checks, and file retrieval into distinct command-line steps, allowing users to inspect and
-validate intermediate results before proceeding. In a typical workflow (Figure 1), the user first specifies a parent
-download directory and one or more target variables. The workflow supports a user-editable
-`search_criteria.toml` file that can predefine ESGF search facets, including project, experiments, frequency, variables,
-and grid labels, while still allowing interactive entry of variable_id when that field is intentionally left blank.
-The catalogue search stage then queries ESGF holdings for matching CMIP products (CMIP6 as the default option), filters
-results to retain scientifically relevant combinations such as
-paired `piControl` and `historical` simulations, and exports tabular search summaries for inspection. Subsequent stages
-verify whether shortlisted files are reachable on remote nodes, assign local destination paths, and download both target variables and required supporting grid-cell
-measures such as `areacello` and `volcello`. This staged design is intended to improve transparency and reproducibility in archive-based Earth system workflows. By
-treating search results, validation outputs, and downloadable file lists as explicit intermediate artifacts, the
-software supports both interactive use and later auditing of dataset selection decisions.
+`precog-esgf-intake` implements a staged workflow for archive-scale ESGF data discovery, screening, and retrieval.
+Rather than moving directly from catalogue search to cached download, the software separates archive interrogation,
+shortlist generation, branch and grid validation, downloadability checks, and file retrieval into distinct command-line
+steps, allowing users to inspect and validate intermediate results before proceeding. 
+
+In a typical workflow (Figure 1), the user first edits a user-facing `search_criteria.toml` configuration file to define
+the intended ESGF search criteria, including project, activity, experiment, frequency, variables (optional), and grid
+labels. This externalised configuration makes search intent easier to reproduce than editing hard-coded dictionaries in
+source code, while still allowing interactive entry of `variable_id` when that field is intentionally left
+blank. The catalogue search stage then queries ESGF holdings for matching CMIP products (`CMIP6` by default), exports
+tabular search summaries for inspection, and applies screening logic to retain
+scientifically relevant combinations such as paired `piControl` and `historical` simulations on common valid
+grids.
+
+A key feature of the workflow is the ability to **combine** multiple requested variables into a single conditional
+shortlist. Rather than screening each variable independently, users can require that the same model provides all
+requested variables simultaneously, for both `piControl` and `historical`, before that model progresses to the
+downloadable shortlist. This combined screening is particularly useful for multi-field diagnostics where consistent 
+co-availability of variables is required for downstream interpretation.
+
+The workflow supports both single-branch and ensemble-aware catalogue screening. In single-branch mode, the 
+search retains one internally consistent `piControl`/`historical` branch pairing for each accepted model-grid combination. In
+ensemble-aware mode, the workflow first identifies a validated `piControl` anchor branch and then retains all compatible
+`historical` ensemble members on the same model/grid pair, provided that the requested variables are complete and
+continuity checks are satisfied. Grid-level diagnostics are generated from catalogue
+metadata so that invalid model-grid combinations can be rejected before download preparation, and validation outputs are
+preserved for later auditing.
+
+Subsequent stages verify whether shortlisted files are reachable on remote ESGF nodes, assign local destination paths,
+and download both target variables and required supporting grid-cell measures such as `areacello` and
+`volcello`. By treating search results, validation outputs, and downloadable file lists as explicit intermediate
+artefacts, the software supports both interactive exploratory use and more reproducible archive-based Earth system workflows in
+which dataset selection decisions can be inspected, traced, and repeated at a later time.
 
 ![](precog-esgf-intake-diagram.png)
 {width=90%}
@@ -144,7 +166,7 @@ A representative use case is the identification of CMIP6 models that simultaneou
 and historical outputs for ocean biogeochemical variables such as `expc` and `epc100`, together with auxiliary or
 supporting variables and the associated grid-cell measures required for downstream analyses. The repository
 accompanying this software includes
-a [workflow example](https://github.com/LeoBertini/precog-esgf-intake/blob/main/Workflow_Example_POCflux.ipynb)
+a [workflow example](https://github.com/precog-ocean/precog-esgf-intake/blob/main/Workflow_Example_POCflux.ipynb)
 demonstrating this type of archive screening and retrieval process.
 
 This is particularly relevant for ocean biogeochemistry and carbon-cycle studies, where analyses often
