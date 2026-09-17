@@ -99,7 +99,7 @@ subset of model output that satisfies practical and scientific constraints.
 
 The software provides several features tailored to archive-scale Earth system data workflows:
 
-- Definition of ESGF search criteria by modifying a [`search_criteria.toml`](scripts/search_criteria.toml) configuration file.
+- Definition of ESGF search criteria by modifying a [`search_criteria.toml`](https://github.com/precog-ocean/precog-esgf-intake/blob/main/scripts/search_criteria.toml) configuration file.
 - Automated search through the ESGF catalogue using project, variable, experiment, and temporal filters (inherited 
   from [intake-esgf](https://github.com/esgf2-us/intake-esgf)).
 - Ensemble-aware screening mode for selecting one validated `piControl` anchor branch and retaining all compatible `Historical` ensemble members on the same grid.
@@ -166,7 +166,7 @@ A representative use case is the identification of CMIP6 models that simultaneou
 and historical outputs for ocean biogeochemical variables such as `expc` and `epc100`, together with auxiliary or
 supporting variables and the associated grid-cell measures required for downstream analyses. The repository
 accompanying this software includes
-a [workflow example](https://github.com/LeoBertini/precog-esgf-intake/blob/main/Workflow_Example_POCflux.ipynb)
+a [workflow example](https://github.com/precog-ocean/precog-esgf-intake/blob/main/Workflow_Example_POCflux.ipynb)
 demonstrating this type of archive screening and retrieval process.
 
 This is particularly relevant for ocean biogeochemistry and carbon-cycle studies, where analyses often
