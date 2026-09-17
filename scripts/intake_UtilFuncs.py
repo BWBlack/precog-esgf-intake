@@ -418,60 +418,82 @@ def catalog_traverser(logger, CatalogDF, varlist):
 
 def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
     """
-    Ensemble-aware traverser using precomputed piControl anchor keys.
+    Traverse a catalogue dataframe in ensemble mode.
+
+    Core ensemble logic
+    -------------------
+    1. Select one piControl anchor per (source_id, grid_label), precomputed in
+       `pi_anchor_keys` as the lowest acceptable variant.
+    2. Validate that piControl anchor across all variables in `varlist`.
+    3. Retain every historical variant on the same (source_id, grid_label) that:
+       - is complete across `varlist`
+       - passes continuity checks for all variables
 
     Parameters
     ----------
     logger : logging.Logger
-    CatalogDF : pd.DataFrame
-        Full dataframe containing all runs and all retained ensemble members.
-    varlist : list[str] | str
-        Variables that must be present for union validity.
-    pi_anchor_keys : pd.DataFrame
-        Precomputed anchor keys with columns:
-        ['source_id', 'grid_label', 'variant_label']
+        Logger used for verbose screening output.
+    CatalogDF : pandas.DataFrame
+        Catalogue dataframe containing piControl and historical rows.
+    varlist : list[str] or str
+        Variables required for completeness.
+    pi_anchor_keys : pandas.DataFrame
+        One-row-per-anchor dataframe with columns:
+        ['source_id', 'grid_label', 'variant_label'].
+        This should already represent the chosen lowest piControl anchor for each
+        (source_id, grid_label).
 
     Returns
     -------
-    models_to_discard : list
-    model_DF_test_grids_concatenated : pd.DataFrame
-    df_downloadable : pd.DataFrame
+    models_to_discard : list[str]
+        Models rejected because no valid grid / anchor / historical members survived.
+    model_DF_test_grids_concatenated : pandas.DataFrame
+        Grid-level diagnostics dataframe from check_grid_avail().
+    df_downloadable : pandas.DataFrame
+        Final downloadable dataframe containing:
+        - one validated piControl anchor per kept (source_id, grid_label)
+        - all valid historical variants on that same (source_id, grid_label)
     """
     if isinstance(varlist, str):
         varlist = [varlist]
 
     required_anchor_cols = ['source_id', 'grid_label', 'variant_label']
-    missing_anchor = [c for c in required_anchor_cols if c not in pi_anchor_keys.columns]
-    if missing_anchor:
-        raise KeyError(f'pi_anchor_keys missing required columns: {missing_anchor}')
+    missing_anchor_cols = [c for c in required_anchor_cols if c not in pi_anchor_keys.columns]
+    if missing_anchor_cols:
+        raise KeyError(f"pi_anchor_keys missing required columns: {missing_anchor_cols}")
 
-    models = CatalogDF['source_id'].unique().tolist()
     models_to_discard = []
-
-    model_DF_test_grids_concatenated = pd.DataFrame(
-        columns=['grid_label', 'var_test', 'variable_ids', 'has_all_variables', 'run', 'model']
-    )
-
+    model_DF_test_grids_concatenated = pd.DataFrame()
     df_downloadable = pd.DataFrame(columns=CatalogDF.columns)
 
     for model in sorted(CatalogDF['source_id'].dropna().unique().tolist()):
         logger.info(f'\n')
         logger.info(f"================ MODEL: {model} ================")
 
-        variables_in = check_var_in(df_model, varlist)
-        if not all(variables_in):
-            logger.info(
-                f'The model: {model} does not have all variable(s) of interest: '
-                f'test for {varlist} returned {variables_in}\n'
-            )
+        DataFrameSubsetModel = CatalogDF.loc[CatalogDF['source_id'] == model].copy()
+
+        if DataFrameSubsetModel.empty:
+            logger.info(f"No rows found for model {model}.")
             models_to_discard.append(model)
             continue
 
+        # -------------------------------------------------------------
+        # 1. Identify grids that are valid in both piControl and historical
+        # -------------------------------------------------------------
         test_grids_pi = check_grid_avail(
-            df_model, varlist, grid_labels=['gn', 'gr'], run='piControl', logger=logger
+            DataFrameSubsetModel=DataFrameSubsetModel,
+            varlist=varlist,
+            grid_labels=['gn', 'gr'],
+            run='piControl',
+            logger=logger
         )
+
         test_grids_historical = check_grid_avail(
-            df_model, varlist, grid_labels=['gn', 'gr'], run='historical', logger=logger
+            DataFrameSubsetModel=DataFrameSubsetModel,
+            varlist=varlist,
+            grid_labels=['gn', 'gr'],
+            run='historical',
+            logger=logger
         )
 
         model_DF_test_grids = pd.concat(
@@ -483,13 +505,16 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
         )
 
         model_DF_test_grids_concatenated = pd.concat(
-            [model_DF_test_grids_concatenated, model_DF_test_grids],
+            [
+                model_DF_test_grids_concatenated,
+                model_DF_test_grids
+            ],
             ignore_index=True
         )
 
         valid_pi_grids = set(
             model_DF_test_grids.loc[
-                (model_DF_test_grids["run"] == 'piControl') &
+                (model_DF_test_grids["run"] == "piControl") &
                 (model_DF_test_grids["has_all_variables"] == True),
                 "grid_label"
             ].tolist()
@@ -497,7 +522,7 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
 
         valid_historical_grids = set(
             model_DF_test_grids.loc[
-                (model_DF_test_grids["run"] == 'historical') &
+                (model_DF_test_grids["run"] == "historical") &
                 (model_DF_test_grids["has_all_variables"] == True),
                 "grid_label"
             ].tolist()
@@ -507,8 +532,8 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
 
         if len(valid_grids) == 0:
             logger.info(
-                f'Model {model} does not have a common valid grid across piControl '
-                f'and historical for {varlist}. Discarding model.\n'
+                f"Model {model} does not have a common valid grid across piControl "
+                f"and historical for {varlist}. Discarding model.\n"
             )
             models_to_discard.append(model)
             continue
@@ -516,21 +541,34 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
         df_model_keep = pd.DataFrame(columns=CatalogDF.columns)
 
         for grid in valid_grids:
-            logger.info(f'--- Processing model {model} on grid {grid} ---')
+            logger.info(f"--- Processing model {model} on grid {grid} ---")
 
             # -------------------------------------------------------------
-            # 1. Recover anchor rows for this model/grid from precomputed keys
+            # 2. Recover the single precomputed piControl anchor for model/grid
             # -------------------------------------------------------------
             anchor_keys_this = pi_anchor_keys.loc[
                 (pi_anchor_keys['source_id'] == model) &
                 (pi_anchor_keys['grid_label'] == grid)
-            ].drop_duplicates()
+            ].copy()
 
             if anchor_keys_this.empty:
                 logger.info(
-                    f'Model {model}, grid {grid}: no precomputed piControl anchor key found.'
+                    f"Model {model}, grid {grid}: no piControl anchor key found."
                 )
                 continue
+
+            if len(anchor_keys_this) > 1:
+                logger.info(
+                    f"Model {model}, grid {grid}: multiple anchor rows found; "
+                    f"expected one lowest anchor only. Keeping first row."
+                )
+                anchor_keys_this = anchor_keys_this.iloc[[0]].copy()
+
+            anchor_variant = anchor_keys_this['variant_label'].iloc[0]
+            logger.info(
+                f"Model {model}, grid {grid}: using piControl anchor variant "
+                f"{anchor_variant}"
+            )
 
             df_pi = CatalogDF.loc[
                 (CatalogDF['source_id'] == model) &
@@ -546,35 +584,34 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
 
             if df_pi_anchor.empty:
                 logger.info(
-                    f'Model {model}, grid {grid}: anchor key exists but no piControl rows matched it.'
+                    f"Model {model}, grid {grid}: anchor key exists but no "
+                    f"piControl rows matched it."
                 )
                 continue
 
-            # enforce completeness on anchor rows
+            # -------------------------------------------------------------
+            # 3. Validate piControl anchor across varlist
+            # -------------------------------------------------------------
             anchor_var_test = check_var_in(df_pi_anchor, varlist)
             if not all(anchor_var_test):
                 logger.info(
-                    f'Model {model}, grid {grid}: piControl anchor rows are not complete '
-                    f'across {varlist}.'
+                    f"Model {model}, grid {grid}: piControl anchor is not complete "
+                    f"across {varlist}."
                 )
                 continue
 
-            # optional continuity checks on the anchor
             pi_anchor_ok = True
-            anchor_variant_labels = sorted(df_pi_anchor['variant_label'].dropna().unique().tolist())
-
-            logger.info(
-                f'Model {model}, grid {grid}: using piControl anchor variant(s) '
-                f'{anchor_variant_labels}'
-            )
 
             for var in varlist:
-                df_pi_anchor_var = df_pi_anchor.loc[df_pi_anchor['variable_id'] == var].copy()
+                df_pi_anchor_var = df_pi_anchor.loc[
+                    df_pi_anchor['variable_id'] == var
+                ].copy()
 
-                if len(df_pi_anchor_var) == 0:
+                if df_pi_anchor_var.empty:
                     pi_anchor_ok = False
                     logger.info(
-                        f'Model {model}, grid {grid}: anchor missing piControl variable {var}.'
+                        f"Model {model}, grid {grid}: anchor missing piControl "
+                        f"variable {var}."
                     )
                     break
 
@@ -587,8 +624,8 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
                 if not all(consecutive_test_pi):
                     pi_anchor_ok = False
                     logger.info(
-                        f'Model {model}, grid {grid}: piControl anchor continuity failed '
-                        f'for variable {var}.'
+                        f"Model {model}, grid {grid}: piControl anchor continuity "
+                        f"failed for variable {var}."
                     )
                     break
 
@@ -596,7 +633,7 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
                 continue
 
             # -------------------------------------------------------------
-            # 2. Keep all historical variant groups complete across varlist
+            # 4. Retain all valid historical variants on the same model/grid
             # -------------------------------------------------------------
             df_hist = CatalogDF.loc[
                 (CatalogDF['source_id'] == model) &
@@ -605,7 +642,7 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
             ].copy()
 
             if df_hist.empty:
-                logger.info(f'Model {model}, grid {grid}: no historical rows found.')
+                logger.info(f"Model {model}, grid {grid}: no historical rows found.")
                 continue
 
             hist_counts = (
@@ -615,30 +652,36 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
             )
 
             hist_complete_variants = hist_counts.loc[
-                hist_counts['n_var'] == len(varlist), 'variant_label'
+                hist_counts['n_var'] == len(varlist),
+                'variant_label'
             ].tolist()
 
             if len(hist_complete_variants) == 0:
                 logger.info(
-                    f'Model {model}, grid {grid}: no historical variants are complete '
-                    f'across {varlist}.'
+                    f"Model {model}, grid {grid}: no historical variants are complete "
+                    f"across {varlist}."
                 )
                 continue
 
             hist_variants_to_keep = []
 
             for hist_variant in sorted(hist_complete_variants):
-                df_hist_variant = df_hist.loc[df_hist['variant_label'] == hist_variant].copy()
+                df_hist_variant = df_hist.loc[
+                    df_hist['variant_label'] == hist_variant
+                ].copy()
 
                 hist_variant_ok = True
-                for var in varlist:
-                    df_hist_var = df_hist_variant.loc[df_hist_variant['variable_id'] == var].copy()
 
-                    if len(df_hist_var) == 0:
+                for var in varlist:
+                    df_hist_var = df_hist_variant.loc[
+                        df_hist_variant['variable_id'] == var
+                    ].copy()
+
+                    if df_hist_var.empty:
                         hist_variant_ok = False
                         logger.info(
-                            f'Model {model}, grid {grid}, historical {hist_variant}: '
-                            f'missing variable {var}.'
+                            f"Model {model}, grid {grid}, historical {hist_variant}: "
+                            f"missing variable {var}."
                         )
                         break
 
@@ -651,8 +694,8 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
                     if not all(consecutive_test_hist):
                         hist_variant_ok = False
                         logger.info(
-                            f'Model {model}, grid {grid}, historical {hist_variant}: '
-                            f'continuity failed for variable {var}.'
+                            f"Model {model}, grid {grid}, historical {hist_variant}: "
+                            f"continuity failed for variable {var}."
                         )
                         break
 
@@ -661,35 +704,65 @@ def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
 
             if len(hist_variants_to_keep) == 0:
                 logger.info(
-                    f'Model {model}, grid {grid}: no historical variants survived '
-                    f'completeness + continuity checks.'
+                    f"Model {model}, grid {grid}: no historical variants survived "
+                    f"completeness + continuity checks."
                 )
                 continue
 
             logger.info(
-                f'Model {model}, grid {grid}: keeping historical variants '
-                f'{hist_variants_to_keep}'
+                f"Model {model}, grid {grid}: keeping historical variants "
+                f"{hist_variants_to_keep}"
             )
 
             df_hist_keep = df_hist.loc[
                 df_hist['variant_label'].isin(hist_variants_to_keep)
             ].copy()
 
-            df_grid_keep = pd.concat([df_pi_anchor, df_hist_keep], ignore_index=True)
-            df_model_keep = pd.concat([df_model_keep, df_grid_keep], ignore_index=True)
+            # -------------------------------------------------------------
+            # 5. Append one anchor + all valid historical variants
+            # -------------------------------------------------------------
+            df_grid_keep = pd.concat(
+                [df_pi_anchor, df_hist_keep],
+                ignore_index=True
+            )
+
+            df_model_keep = pd.concat(
+                [df_model_keep, df_grid_keep],
+                ignore_index=True
+            )
 
         if df_model_keep.empty:
             logger.info(
-                f'Model {model} did not yield any downloadable rows in ensemble mode.\n'
+                f"Model {model} did not yield any downloadable rows in ensemble mode.\n"
             )
             models_to_discard.append(model)
             continue
 
-        df_downloadable = pd.concat([df_downloadable, df_model_keep], ignore_index=True)
+        df_downloadable = pd.concat(
+            [df_downloadable, df_model_keep],
+            ignore_index=True
+        )
+
+    # Deduplicate using scalar identity columns only
+    dedupe_cols = [
+        'source_id',
+        'experiment_id',
+        'variant_label',
+        'variable_id',
+        'grid_label'
+    ]
+
+    # Prefer scalar file-level identifiers when available.
+    # Do not use HTTPServer here, because it can be list-valued and therefore
+    # unhashable inside drop_duplicates().
+    if 'path' in df_downloadable.columns:
+        dedupe_cols.append('path')
+    elif 'dataset_id' in df_downloadable.columns:
+        dedupe_cols.append('dataset_id')
 
     df_downloadable = (
         df_downloadable
-        .drop_duplicates()
+        .drop_duplicates(subset=dedupe_cols)
         .reset_index(drop=True)
     )
 
