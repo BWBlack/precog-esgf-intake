@@ -142,7 +142,7 @@ requested variables simultaneously, for both `piControl` and `historical`, befor
 downloadable shortlist. This combined screening is particularly useful for multi-field diagnostics where consistent 
 co-availability of variables is required for downstream interpretation.
 
-Additionaly, workflow supports both single-branch and ensemble-aware catalogue screening. In single-branch mode, the 
+The workflow supports both single-branch and ensemble-aware catalogue screening. In single-branch mode, the 
 search retains one internally consistent `piControl`/`historical` branch pairing for each accepted model-grid combination. In
 ensemble-aware mode, the workflow first identifies a validated `piControl` anchor branch and then retains all compatible
 `historical` ensemble members on the same model/grid pair, provided that the requested variables are complete and
