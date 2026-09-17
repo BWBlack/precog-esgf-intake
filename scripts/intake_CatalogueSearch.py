@@ -183,6 +183,7 @@ combine=input("Would you like perform a 'union' validation to check for PI and H
 
 #Initializing dataframe objects
 DFCombined = pd.DataFrame(columns=DicDataframeSearches['search_results'][0].columns)
+DFCombinedPiAnchors = pd.DataFrame(columns=DicDataframePiAnchors['search_results'][0].columns)
 
 # =========== ================= ======== #
 # =========== MAIN LOOP LOGIC   ======== #
