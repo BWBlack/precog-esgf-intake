@@ -416,6 +416,334 @@ def catalog_traverser(logger, CatalogDF, varlist):
     return models_to_discard, model_DF_test_grids_concatenated, df_downloadable
 
 
+def catalog_traverser_ensemble(logger, CatalogDF, varlist, pi_anchor_keys):
+    """
+    Ensemble-aware traverser using precomputed piControl anchor keys.
+
+    Parameters
+    ----------
+    logger : logging.Logger
+    CatalogDF : pd.DataFrame
+        Full dataframe containing all runs and all retained ensemble members.
+    varlist : list[str] | str
+        Variables that must be present for union validity.
+    pi_anchor_keys : pd.DataFrame
+        Precomputed anchor keys with columns:
+        ['source_id', 'grid_label', 'variant_label']
+
+    Returns
+    -------
+    models_to_discard : list
+    model_DF_test_grids_concatenated : pd.DataFrame
+    df_downloadable : pd.DataFrame
+    """
+    if isinstance(varlist, str):
+        varlist = [varlist]
+
+    required_anchor_cols = ['source_id', 'grid_label', 'variant_label']
+    missing_anchor = [c for c in required_anchor_cols if c not in pi_anchor_keys.columns]
+    if missing_anchor:
+        raise KeyError(f'pi_anchor_keys missing required columns: {missing_anchor}')
+
+    models = CatalogDF['source_id'].unique().tolist()
+    models_to_discard = []
+
+    model_DF_test_grids_concatenated = pd.DataFrame(
+        columns=['grid_label', 'var_test', 'variable_ids', 'has_all_variables', 'run', 'model']
+    )
+
+    df_downloadable = pd.DataFrame(columns=CatalogDF.columns)
+
+    for model in models:
+        df_model = CatalogDF.loc[CatalogDF['source_id'] == model].copy()
+
+        variables_in = check_var_in(df_model, varlist)
+        if not all(variables_in):
+            logger.info(
+                f'The model: {model} does not have all variable(s) of interest: '
+                f'test for {varlist} returned {variables_in}\n'
+            )
+            models_to_discard.append(model)
+            continue
+
+        test_grids_pi = check_grid_avail(
+            df_model, varlist, grid_labels=['gn', 'gr'], run='piControl', logger=logger
+        )
+        test_grids_historical = check_grid_avail(
+            df_model, varlist, grid_labels=['gn', 'gr'], run='historical', logger=logger
+        )
+
+        model_DF_test_grids = pd.concat(
+            [
+                pd.DataFrame.from_dict(test_grids_pi),
+                pd.DataFrame.from_dict(test_grids_historical)
+            ],
+            ignore_index=True
+        )
+
+        model_DF_test_grids_concatenated = pd.concat(
+            [model_DF_test_grids_concatenated, model_DF_test_grids],
+            ignore_index=True
+        )
+
+        valid_pi_grids = set(
+            model_DF_test_grids.loc[
+                (model_DF_test_grids["run"] == 'piControl') &
+                (model_DF_test_grids["has_all_variables"] == True),
+                "grid_label"
+            ].tolist()
+        )
+
+        valid_historical_grids = set(
+            model_DF_test_grids.loc[
+                (model_DF_test_grids["run"] == 'historical') &
+                (model_DF_test_grids["has_all_variables"] == True),
+                "grid_label"
+            ].tolist()
+        )
+
+        valid_grids = sorted(list(valid_pi_grids.intersection(valid_historical_grids)))
+
+        if len(valid_grids) == 0:
+            logger.info(
+                f'Model {model} does not have a common valid grid across piControl '
+                f'and historical for {varlist}. Discarding model.\n'
+            )
+            models_to_discard.append(model)
+            continue
+
+        df_model_keep = pd.DataFrame(columns=CatalogDF.columns)
+
+        for grid in valid_grids:
+            logger.info(f'--- Processing model {model} on grid {grid} ---')
+
+            # -------------------------------------------------------------
+            # 1. Recover anchor rows for this model/grid from precomputed keys
+            # -------------------------------------------------------------
+            anchor_keys_this = pi_anchor_keys.loc[
+                (pi_anchor_keys['source_id'] == model) &
+                (pi_anchor_keys['grid_label'] == grid)
+            ].drop_duplicates()
+
+            if anchor_keys_this.empty:
+                logger.info(
+                    f'Model {model}, grid {grid}: no precomputed piControl anchor key found.'
+                )
+                continue
+
+            df_pi = CatalogDF.loc[
+                (CatalogDF['source_id'] == model) &
+                (CatalogDF['grid_label'] == grid) &
+                (CatalogDF['experiment_id'] == 'piControl')
+            ].copy()
+
+            df_pi_anchor = df_pi.merge(
+                anchor_keys_this,
+                on=['source_id', 'grid_label', 'variant_label'],
+                how='inner'
+            )
+
+            if df_pi_anchor.empty:
+                logger.info(
+                    f'Model {model}, grid {grid}: anchor key exists but no piControl rows matched it.'
+                )
+                continue
+
+            # enforce completeness on anchor rows
+            anchor_var_test = check_var_in(df_pi_anchor, varlist)
+            if not all(anchor_var_test):
+                logger.info(
+                    f'Model {model}, grid {grid}: piControl anchor rows are not complete '
+                    f'across {varlist}.'
+                )
+                continue
+
+            # optional continuity checks on the anchor
+            pi_anchor_ok = True
+            anchor_variant_labels = sorted(df_pi_anchor['variant_label'].dropna().unique().tolist())
+
+            logger.info(
+                f'Model {model}, grid {grid}: using piControl anchor variant(s) '
+                f'{anchor_variant_labels}'
+            )
+
+            for var in varlist:
+                df_pi_anchor_var = df_pi_anchor.loc[df_pi_anchor['variable_id'] == var].copy()
+
+                if len(df_pi_anchor_var) == 0:
+                    pi_anchor_ok = False
+                    logger.info(
+                        f'Model {model}, grid {grid}: anchor missing piControl variable {var}.'
+                    )
+                    break
+
+                counter_pi, single_file_pi, consecutive_test_pi = check_continuity(
+                    df_pi_anchor_var,
+                    run='piControl',
+                    logger=logger
+                )
+
+                if not all(consecutive_test_pi):
+                    pi_anchor_ok = False
+                    logger.info(
+                        f'Model {model}, grid {grid}: piControl anchor continuity failed '
+                        f'for variable {var}.'
+                    )
+                    break
+
+            if not pi_anchor_ok:
+                continue
+
+            # -------------------------------------------------------------
+            # 2. Keep all historical variant groups complete across varlist
+            # -------------------------------------------------------------
+            df_hist = CatalogDF.loc[
+                (CatalogDF['source_id'] == model) &
+                (CatalogDF['grid_label'] == grid) &
+                (CatalogDF['experiment_id'] == 'historical')
+            ].copy()
+
+            if df_hist.empty:
+                logger.info(f'Model {model}, grid {grid}: no historical rows found.')
+                continue
+
+            hist_counts = (
+                df_hist.groupby('variant_label')['variable_id']
+                .nunique()
+                .reset_index(name='n_var')
+            )
+
+            hist_complete_variants = hist_counts.loc[
+                hist_counts['n_var'] == len(varlist), 'variant_label'
+            ].tolist()
+
+            if len(hist_complete_variants) == 0:
+                logger.info(
+                    f'Model {model}, grid {grid}: no historical variants are complete '
+                    f'across {varlist}.'
+                )
+                continue
+
+            hist_variants_to_keep = []
+
+            for hist_variant in sorted(hist_complete_variants):
+                df_hist_variant = df_hist.loc[df_hist['variant_label'] == hist_variant].copy()
+
+                hist_variant_ok = True
+                for var in varlist:
+                    df_hist_var = df_hist_variant.loc[df_hist_variant['variable_id'] == var].copy()
+
+                    if len(df_hist_var) == 0:
+                        hist_variant_ok = False
+                        logger.info(
+                            f'Model {model}, grid {grid}, historical {hist_variant}: '
+                            f'missing variable {var}.'
+                        )
+                        break
+
+                    counter_hist, single_file_hist, consecutive_test_hist = check_continuity(
+                        df_hist_var,
+                        run='historical',
+                        logger=logger
+                    )
+
+                    if not all(consecutive_test_hist):
+                        hist_variant_ok = False
+                        logger.info(
+                            f'Model {model}, grid {grid}, historical {hist_variant}: '
+                            f'continuity failed for variable {var}.'
+                        )
+                        break
+
+                if hist_variant_ok:
+                    hist_variants_to_keep.append(hist_variant)
+
+            if len(hist_variants_to_keep) == 0:
+                logger.info(
+                    f'Model {model}, grid {grid}: no historical variants survived '
+                    f'completeness + continuity checks.'
+                )
+                continue
+
+            logger.info(
+                f'Model {model}, grid {grid}: keeping historical variants '
+                f'{hist_variants_to_keep}'
+            )
+
+            df_hist_keep = df_hist.loc[
+                df_hist['variant_label'].isin(hist_variants_to_keep)
+            ].copy()
+
+            df_grid_keep = pd.concat([df_pi_anchor, df_hist_keep], ignore_index=True)
+            df_model_keep = pd.concat([df_model_keep, df_grid_keep], ignore_index=True)
+
+        if df_model_keep.empty:
+            logger.info(
+                f'Model {model} did not yield any downloadable rows in ensemble mode.\n'
+            )
+            models_to_discard.append(model)
+            continue
+
+        df_downloadable = pd.concat([df_downloadable, df_model_keep], ignore_index=True)
+
+    df_downloadable = (
+        df_downloadable
+        .drop_duplicates()
+        .reset_index(drop=True)
+    )
+
+    return models_to_discard, model_DF_test_grids_concatenated, df_downloadable
+
+
+def build_picontrol_anchor_keys(PiAnchorDF, varlist, logger=None):
+    """
+    Build a dataframe of piControl anchor keys from a dataframe that already
+    represents the piControl-only result after remove_ensembles().
+
+    Parameters
+    ----------
+    PiAnchorDF : pd.DataFrame
+        Dataframe built from piControl-only catalog results after
+        cat.remove_ensembles().
+    varlist : list[str] | str
+        Variables required for completeness.
+    logger : logging.Logger | None
+
+    Returns
+    -------
+    pd.DataFrame
+        Unique anchor keys with columns:
+        ['source_id', 'grid_label', 'variant_label']
+    """
+    if isinstance(varlist, str):
+        varlist = [varlist]
+
+    required_cols = ['source_id', 'grid_label', 'variant_label', 'variable_id']
+    missing = [c for c in required_cols if c not in PiAnchorDF.columns]
+    if missing:
+        raise KeyError(f'PiAnchorDF missing required columns: {missing}')
+
+    # only keep anchor groups complete across varlist
+    pi_counts = (
+        PiAnchorDF.groupby(['source_id', 'grid_label', 'variant_label'])['variable_id']
+        .nunique()
+        .reset_index(name='n_var')
+    )
+
+    anchor_keys = pi_counts.loc[
+        pi_counts['n_var'] == len(varlist),
+        ['source_id', 'grid_label', 'variant_label']
+    ].drop_duplicates().reset_index(drop=True)
+
+    if logger is not None:
+        logger.info(
+            f'Built {len(anchor_keys)} piControl anchor key rows from '
+            f'remove_ensembles()-collapsed piControl results.'
+        )
+
+    return anchor_keys
+
+
 def check_grid_avail(DataFrameSubsetModel, varlist, grid_labels, run, logger):
     # tests if all variables being queried have matching grids
     # example: Even though NorESM2-LM has thetao and so for the native grid, it does not have o2, then flag it and do not intake native grid files.
