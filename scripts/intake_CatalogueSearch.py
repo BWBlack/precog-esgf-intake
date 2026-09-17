@@ -201,9 +201,10 @@ if combine.lower().strip(" ") in ['y', 'yes']:
 
     # and concatenate dataframes from dic of chosen vars
     for idx, oceanvarname in enumerate(DicDataframeSearches['variable_names']):
-        result = DicDataframeSearches['search_results'][idx]
-        print(result)
-        DFCombined = pd.concat([DFCombined, result], axis=0)
+        if oceanvarname in chosen_vars:
+            result = DicDataframeSearches['search_results'][idx]
+            # print(result)
+            DFCombined = pd.concat([DFCombined, result], axis=0)
 
    ## then pass to catalogue traverser
     logger = instantiate_logging_file(logfilename + '_' + loglabelstr + f"_{today}.txt" , logger_name=loglabelstr)
