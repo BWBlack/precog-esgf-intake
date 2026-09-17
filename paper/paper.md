@@ -123,9 +123,7 @@ The software provides several features tailored to archive-scale Earth system da
 `precog-esgf-intake` implements a staged workflow for archive-scale ESGF data discovery, screening, and retrieval.
 Rather than moving directly from catalogue search to cached download, the software separates archive interrogation,
 shortlist generation, branch and grid validation, downloadability checks, and file retrieval into distinct command-line
-steps, allowing users to inspect and validate intermediate results before proceeding. This design follows common
-scientific-workflow principles in which complex analyses are decomposed into explicit tasks with traceable intermediate
-outputs, improving transparency, reuse, and reproducibility.
+steps, allowing users to inspect and validate intermediate results before proceeding. 
 
 In a typical workflow (Figure 1), the user first edits a user-facing `search_criteria.toml` configuration file to define
 the intended ESGF search criteria, including project, activity, experiment, frequency, variables (optional), and grid
@@ -146,9 +144,9 @@ The workflow supports both single-branch and ensemble-aware catalogue screening.
 search retains one internally consistent `piControl`/`historical` branch pairing for each accepted model-grid combination. In
 ensemble-aware mode, the workflow first identifies a validated `piControl` anchor branch and then retains all compatible
 `historical` ensemble members on the same model/grid pair, provided that the requested variables are complete and
-continuity checks are satisfied. Grid-level diagnostics are generated explicitly from catalogue
+continuity checks are satisfied. Grid-level diagnostics are generated from catalogue
 metadata so that invalid model-grid combinations can be rejected before download preparation, and validation outputs are
-preserved as tabular artefacts for later auditing.
+preserved for later auditing.
 
 Subsequent stages verify whether shortlisted files are reachable on remote ESGF nodes, assign local destination paths,
 and download both target variables and required supporting grid-cell measures such as `areacello` and
