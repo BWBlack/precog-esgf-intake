@@ -153,6 +153,15 @@ for oceanvar in variable_ids:
         DicDataframeSearches['search_results'].append(DataFrameSearch_mod)
         DicDataframeSearches['variable_names'].append(oceanvar)
 
+        # Getting piControl anchor runs for use in case the 'ensemble' mode is desired later on by the user
+        cat_pi_anchor = cat.remove_ensembles()  # # filters out to keep only a single member from the ensemble (i.e.,the one with the lowest variant label (see below)
+        info_pi_anchor = cat_pi_anchor.infos_to_dict(quiet=True)
+        DataFrameSearch_pi_anchor = pd.DataFrame.from_dict(info_pi_anchor['https'])
+        DataFrameSearch_pi_anchor_mod = append_cols(PandasDataFrame=DataFrameSearch_pi_anchor)
+        DataFrameSearch_pi_anchor_mod = DataFrameSearch_pi_anchor_mod.loc[DataFrameSearch_pi_anchor_mod['experiment_id'] == 'piControl'].copy()
+        DicDataframePiAnchors['search_results'].append(DataFrameSearch_pi_anchor_mod)
+        DicDataframePiAnchors['variable_names'].append(oceanvar)
+
     else:
         raise KeyError(f'Variable {oceanvar} not found in default variables of interest {variables_of_interest}')
 
