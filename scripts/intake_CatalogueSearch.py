@@ -91,7 +91,6 @@ variable_ids = DefaultSearchParam["variable_id"]
 experiments_must_haves = DefaultSearchParam["experiment_id"]
 
 root_proj = os.path.dirname(os.path.abspath(__name__))
-std_names = import_ocean_std_names(root_proj)
 
 variables_of_interest = import_ocean_std_names(root_proj)
 DicDataframeSearches = {'variable_names': [], 'search_results':[]} #initializing empty dic to facilitate saving data
@@ -127,7 +126,6 @@ for oceanvar in variable_ids:
         )
 
         print(cat.model_groups().to_string())
-        cat = cat.remove_ensembles()  # filters out to keep only a single member from the ensemble (i.e., the one with the lowest variant label (see below)
         print(cat.model_groups().to_string())
 
         # Complete TODO add function to esgf-intake catalog.py file, so that download is not automatic, ...
