@@ -17,6 +17,8 @@ datasets.
 - Ensemble-aware screening mode for selecting one validated `piControl` anchor branch and retaining all compatible Historical ensemble members on the same grid.
 - Single-branch screening mode for selecting one internally consistent `piControl`/Historical branch pairing per 
   accepted model/grid.
+- Combined-variable screening for retaining models that provide all requested variables simultaneously across both 
+piControl and historical runs, producing a single shortlist for downstream download.
 - Verification of continuity of date stamps in CMIP6 Pre-Industrial (PI) and Historical runs.
 - Verification and logging of availability of `piControl` and `Historical` runs on consistent grids (e.g., regular grid 
   `gr` and native grid `gn`).
