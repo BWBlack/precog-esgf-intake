@@ -104,6 +104,17 @@ search_frequency = DefaultSearchParam["frequency"]
 search_grid_label = DefaultSearchParam["grid_label"]
 ##
 
+ensemble_mode = input(
+    "Choose ensemble handling mode:\n"
+    "'single' = this will return aligned members across piControl and historical runs (sharing the exact same "
+    "variant label)\n"
+    "'ensemble' = lowest piControl anchor + all compatible historical variants\n"
+    "Type [single/ensemble]: "
+).strip().lower()
+
+if ensemble_mode not in ["single", "ensemble"]:
+    raise ValueError(f"Unsupported ensemble_mode: {ensemble_mode}")
+
 for oceanvar in variable_ids:
     if oceanvar.lower() in variables_of_interest:
         cat = ESGFCatalog().search(
