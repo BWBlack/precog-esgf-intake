@@ -13,10 +13,13 @@ datasets.
 
 - Definition of ESGF search criteria by modifying a [`search_criteria.toml`](scripts/search_criteria.toml) configuration file.
 - Automated search through the ESGF catalogue using project, variable, experiment, and temporal filters (inherited 
-  from [intake-esgf](https://github.com/esgf2-us/intake-esgf));.
+  from [intake-esgf](https://github.com/esgf2-us/intake-esgf)).
+- Ensemble-aware screening mode for selecting one validated `piControl` anchor branch and retaining all compatible Historical ensemble members on the same grid.
+- Single-branch screening mode for selecting one internally consistent `piControl`/Historical branch pairing per 
+  accepted model/grid.
 - Verification of continuity of date stamps in CMIP6 Pre-Industrial (PI) and Historical runs.
-- Verification and logging of availability of (PI) and Historical runs on consistent grids (e.g., regular grid `gr` and
-  native grid `gn`).
+- Verification and logging of availability of `piControl` and `Historical` runs on consistent grids (e.g., regular grid 
+  `gr` and native grid `gn`).
 - Export of simple Dataframes for realised ESGF catalogue searches.
 - Verification of server responses and flagging shortlisted ESM outputs as 'Downloadable'.
 - Combined conditional search for availability of PI and Historical runs in CMIP6 models across >1 variable (e.g.,
@@ -25,7 +28,8 @@ datasets.
 - Parallel batch downloading of files from multiple ESGF nodes with retry and integrity checks.
 - Local directory layout optimised for downstream analysis.
 - Parallel batch search and download of grid cell measures (e.g., `areacello` and `volcello`) with archive snapshot of
-  relaxed regex matches for CMIP6 models of interest for later inspection.
+  relaxed regex matches for later inspection.
+- Example Jupyter notebook workflow covering TOML setup, catalogue screening, and download preparation.
 
 ## Installation
 
