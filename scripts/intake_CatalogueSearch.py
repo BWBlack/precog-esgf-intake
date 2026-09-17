@@ -91,11 +91,10 @@ variable_ids = DefaultSearchParam["variable_id"]
 experiments_must_haves = DefaultSearchParam["experiment_id"]
 
 root_proj = os.path.dirname(os.path.abspath(__name__))
-std_names = import_ocean_std_names(root_proj)
 
-variables_of_interest = std_names
+variables_of_interest = import_ocean_std_names(root_proj)
 DicDataframeSearches = {'variable_names': [], 'search_results':[]} #initializing empty dic to facilitate saving data
-
+DicDataframePiAnchors = {'variable_names': [],'search_results': []}
 ##
 search_project = DefaultSearchParam["project"]
 search_activity_drs = DefaultSearchParam["activity_drs"]
@@ -103,6 +102,17 @@ search_experiment_id = DefaultSearchParam["experiment_id"]
 search_frequency = DefaultSearchParam["frequency"]
 search_grid_label = DefaultSearchParam["grid_label"]
 ##
+
+ensemble_mode = input(
+    "Choose ensemble handling mode:\n"
+    "'single' = this will return members across piControl and historical runs (sharing the exact same "
+    "variant label)\n"
+    "'ensemble' = lowest piControl variant as an anchor + all compatible historical variants\n"
+    "Type [single/ensemble]: "
+).strip().lower()
+
+if ensemble_mode not in ["single", "ensemble"]:
+    raise ValueError(f"Unsupported ensemble_mode: {ensemble_mode}")
 
 for oceanvar in variable_ids:
     if oceanvar.lower() in variables_of_interest:
@@ -116,14 +126,13 @@ for oceanvar in variable_ids:
         )
 
         print(cat.model_groups().to_string())
-        cat = cat.remove_ensembles()  # filters out to keep only a single member from the ensemble (i.e., the one with the lowest variant label (see below)
         print(cat.model_groups().to_string())
 
         # Complete TODO add function to esgf-intake catalog.py file, so that download is not automatic, ...
         # rather we'd like to retrieve the attributes from the search across all nodes into a DataFrame ...
         # so we can see what is available and where, and do further filtering without having to download heaps of data unnecessarily.
         info = cat.infos_to_dict(quiet=False)  # dictionary structure containing all the urls, SHA256 hashes to enable serialized download
-        DataFrameSearch = pd.DataFrame.from_dict(info['https'])  # all with monthly piControl and historical salinity and potential temperature
+        DataFrameSearch = pd.DataFrame.from_dict(info['https'])  # all with monthly piControl and historical
 
         # Complete TODO split file name so that columns also display the following facets
         # source_id or aka model used
@@ -142,8 +151,17 @@ for oceanvar in variable_ids:
         DicDataframeSearches['search_results'].append(DataFrameSearch_mod)
         DicDataframeSearches['variable_names'].append(oceanvar)
 
+        # Getting piControl anchor runs for use in case the 'ensemble' mode is desired later on by the user
+        cat_pi_anchor = cat.remove_ensembles()  # # filters out to keep only a single member from the ensemble (i.e.,the one with the lowest variant label (see below)
+        info_pi_anchor = cat_pi_anchor.infos_to_dict(quiet=True)
+        DataFrameSearch_pi_anchor = pd.DataFrame.from_dict(info_pi_anchor['https'])
+        DataFrameSearch_pi_anchor_mod = append_cols(PandasDataFrame=DataFrameSearch_pi_anchor)
+        DataFrameSearch_pi_anchor_mod = DataFrameSearch_pi_anchor_mod.loc[DataFrameSearch_pi_anchor_mod['experiment_id'] == 'piControl'].copy()
+        DicDataframePiAnchors['search_results'].append(DataFrameSearch_pi_anchor_mod)
+        DicDataframePiAnchors['variable_names'].append(oceanvar)
+
     else:
-        raise KeyError(f'Variable {var} not found in default variables of interest {variables_of_interest}')
+        raise KeyError(f'Variable {oceanvar} not found in default variables of interest {variables_of_interest}')
 
 #Saving search results to single spreadsheet with individual dataframes where each tab is an ocean variable dataframe
 with pd.ExcelWriter(filename, engine='openpyxl') as writer:
@@ -160,8 +178,14 @@ print("=========================================================================
 print('Now checking if we have complete piControl and Historical runs and consistent availability of grids...')
 combine=input("Would you like perform a 'union' validation to check for PI and Historical runs for > 1 ocean variable?\n"
               "This is equivalent to searching for CMIP6 models that have (var1 & var2 & varN) for both PI and Historical runs. Type [y/n]:")
-DFCombined = pd.DataFrame(columns=DicDataframeSearches['search_results'][0].columns)
 
+#Initializing dataframe objects
+DFCombined = pd.DataFrame(columns=DicDataframeSearches['search_results'][0].columns)
+DFCombinedPiAnchors = pd.DataFrame(columns=DicDataframePiAnchors['search_results'][0].columns)
+
+# =========== ================= ======== #
+# =========== MAIN LOOP LOGIC   ======== #
+# =========== ================= ======== #
 
 if combine.lower().strip(" ") in ['y', 'yes']:
     input_chosen = input(f"Enter which variables from the search {DicDataframeSearches['variable_names']} to combine in the form ['var1', 'var2', 'varN']:")
@@ -173,15 +197,36 @@ if combine.lower().strip(" ") in ['y', 'yes']:
         loglabelstr = loglabelstr + var + "_"
     #loglabelstr = loglabelstr
 
-    # and add function to concatenate dataframes from dic of chosen vars
+    # and concatenate dataframes from dic of chosen vars
     for idx, oceanvarname in enumerate(DicDataframeSearches['variable_names']):
-        result = DicDataframeSearches['search_results'][idx]
-        print(result)
-        DFCombined = pd.concat([DFCombined, result], axis=0)
+        if oceanvarname in chosen_vars:
+            result = DicDataframeSearches['search_results'][idx]
+            # print(result)
+            DFCombined = pd.concat([DFCombined, result], axis=0)
 
    ## then pass to catalogue traverser
     logger = instantiate_logging_file(logfilename + '_' + loglabelstr + f"_{today}.txt" , logger_name=loglabelstr)
-    models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser(logger, DFCombined, chosen_vars)
+
+    # =========== ENSEMBLE MODE   ======== #
+    if ensemble_mode == "ensemble":
+
+        for idx, oceanvarname in enumerate(DicDataframePiAnchors['variable_names']):
+            if oceanvarname in chosen_vars:
+                result_pi = DicDataframePiAnchors['search_results'][idx]
+                DFCombinedPiAnchors = pd.concat([DFCombinedPiAnchors, result_pi], axis=0)
+
+        pi_anchor_keys = build_picontrol_anchor_keys(
+            PiAnchorDF=DFCombinedPiAnchors,
+            varlist=chosen_vars,
+            logger=logger)
+
+        logger.info("Running ensemble mode: lowest piControl anchor + all compatible historical members")
+        models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser_ensemble(logger, DFCombined, chosen_vars, pi_anchor_keys)
+
+    # =========== SINGLE MEMBER MODE   ======== #
+    else:
+        logger.info("Running single-member mode")
+        models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser(logger, DFCombined, chosen_vars)
 
     models_to_keep = df_downloadable['source_id'].unique().tolist()
     logger.info(f"Models with complete PI and Historical runs for {chosen_vars} in at least one consistent grid ('gn' or 'gr'):")
@@ -198,7 +243,11 @@ if combine.lower().strip(" ") in ['y', 'yes']:
     print_coffee()
     logger.info(f'This might take a few minutes... Coffee time?')
     df_downloadable_tested = link_traverser(df_downloadable, logger_name=loglabelstr)
-    save_searched_tests(df_downloadable_tested=df_downloadable_tested, downloadpath=download_path)
+    save_tested_outputs_by_mode(
+        df_downloadable_tested=df_downloadable_tested,
+        downloadpath=download_path,
+        ensemble_mode=ensemble_mode
+    )
     logger.info(f'Traversing complete for vars {chosen_vars}\n')
 
 else:
@@ -213,9 +262,27 @@ else:
         logger.info(f"User chose not to combine. Checking individual variables for PI and Historical run consistency and availability of grids...")
         logger.info(f"###### Testing {oceanvarname} next ######")
 
-        models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser(logger,
-                                                                                                 DicDataframeSearches['search_results'][idx],
-                                                                                                 chosen_vars)
+        # =========== ENSEMBLE MODE   ======== #
+        if ensemble_mode == "ensemble":
+
+            df_pi_anchor_single = DicDataframePiAnchors['search_results'][idx]
+
+            pi_anchor_keys = build_picontrol_anchor_keys(
+                PiAnchorDF=df_pi_anchor_single,
+                varlist=chosen_vars,
+                logger=logger)
+
+            logger.info("Running ensemble mode: lowest piControl anchor + all compatible historical members")
+            models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser_ensemble(logger,
+                                                                                                     DicDataframeSearches['search_results'][idx],
+                                                                                                     chosen_vars,
+                                                                                                     pi_anchor_keys)
+        # =========== SINGLE MEMBER MODE   ======== #
+        else:
+            logger.info("Running single-member mode")
+            models_to_discard, model_DF_test_grids_concatenated, df_downloadable = catalog_traverser(logger,
+                                                                                                     DicDataframeSearches['search_results'][idx],
+                                                                                                     chosen_vars)
 
         models_to_keep = df_downloadable['source_id'].unique().tolist()
         logger.info(
@@ -231,8 +298,12 @@ else:
         print_coffee()
         logger.info(f'This might take a few minutes... Coffee time?')
         df_downloadable_tested = link_traverser(df_downloadable, logger_name=loglabelstr)
-
-        save_searched_tests(df_downloadable_tested=df_downloadable_tested, downloadpath=download_path)
+        save_tested_outputs_by_mode(
+            df_downloadable_tested=df_downloadable_tested,
+            downloadpath=download_path,
+            ensemble_mode=ensemble_mode
+        )
+        #save_searched_tests(df_downloadable_tested=df_downloadable_tested, downloadpath=download_path)
         logger.info(f'Traversing complete for var {chosen_vars}\n')
 
 # #### SANITY CHECK #####
@@ -246,6 +317,7 @@ else:
 ############
 # Motivational quote
 print_precog_footer()
+print("\n")
 logger.info(f'Data sweep complete.\nDataframes should have been saved at {download_path}')
 logger.info(f'Now giddy up and run "~/intake_OceanVarsDL.py" to download the data.')
 
